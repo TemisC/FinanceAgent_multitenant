@@ -1,0 +1,40 @@
+name: Build and Push to Production Branch
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the app
+        # Pasamos las variables de entorno para que se incluyan en el build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Deploy to Branch 'produccion'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist # La carpeta que queremos subir
+          branch: produccion # El nombre de la rama destino
+          clean: true # Borra lo viejo para subir lo nuevo
+          token: ${{ secrets.GITHUB_TOKEN }} # No necesitas crear un secreto fuera, GitHub ya lo tiene
