@@ -10,11 +10,15 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
         setLoading(false);
       }
     };
@@ -40,7 +44,7 @@ export const AuthProvider = ({ children }) => {
         .select('*')
         .eq('id', userId)
         .single();
-      
+
       if (!error && data) {
         setProfile(data);
       }
@@ -52,7 +56,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error in signOut:', error);
+    } finally {
+      // Limpieza forzada de estado local
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+    }
   };
 
   return (
