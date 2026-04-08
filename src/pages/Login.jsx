@@ -49,14 +49,14 @@ export default function Login() {
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div className="relative text-left">
-                        <label className="text-xs font-black text-white/50 uppercase tracking-widest mb-2 block">Usuario / Email</label>
+                        <label className="text-xs font-black text-white/50 uppercase tracking-widest mb-2 block">Usuario</label>
                         <div className="relative">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
                             <input
                                 type="text"
                                 required
-                                className="w-full bg-black border border-white/10 pl-12 pr-6 py-4 rounded-2xl text-white outline-none focus:border-primary transition-all font-medium"
-                                placeholder="ID de Telegram o Email"
+                                className="w-full bg-black border border-white/10 pl-12 pr-6 py-4 rounded-2xl text-white outline-none focus:border-primary transition-all font-medium placeholder:text-white/20"
+                                placeholder="Usuario enviado a tu chat de telegram"
                                 value={identifier}
                                 onChange={(e) => setIdentifier(e.target.value)}
                             />
