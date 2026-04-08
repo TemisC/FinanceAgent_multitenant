@@ -39,7 +39,7 @@ function AppRoutes() {
       <Route path="/register" element={<AuthRoute><Register /></AuthRoute>} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-    </    Routes>
+    </Routes>
   );
 }
 

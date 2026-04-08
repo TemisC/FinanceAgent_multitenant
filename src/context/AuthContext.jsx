@@ -9,25 +9,33 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AuthContext: Iniciando auth...');
+
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        console.log('AuthContext: Sesión obtenida:', session?.user?.email || 'Ninguna');
         setUser(session?.user ?? null);
+
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          fetchProfile(session.user.id); // No usamos await aquí para no bloquear el inicio
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('AuthContext: Error en initAuth:', error);
       } finally {
         setLoading(false);
       }
     };
+
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log('AuthContext: Cambio de estado:', _event);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchProfile(session.user.id);
+        fetchProfile(session.user.id);
       } else {
         setProfile(null);
         setLoading(false);
@@ -39,6 +47,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = async (userId) => {
     try {
+      console.log('AuthContext: Buscando perfil para:', userId);
       const { data, error } = await supabase
         .from('perfiles')
         .select('*')
@@ -47,10 +56,13 @@ export const AuthProvider = ({ children }) => {
 
       if (!error && data) {
         setProfile(data);
+      } else if (error) {
+        console.warn('AuthContext: Error al traer perfil:', error.message);
       }
     } catch (e) {
-      console.error('Error fetching profile:', e);
+      console.error('AuthContext: Excepción en fetchProfile:', e);
     } finally {
+      // Nos aseguramos de quitar el loading siempre
       setLoading(false);
     }
   };
@@ -61,7 +73,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Error in signOut:', error);
     } finally {
-      // Limpieza forzada de estado local
       setUser(null);
       setProfile(null);
       setLoading(false);
