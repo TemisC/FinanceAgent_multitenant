@@ -91,3 +91,14 @@ ALTER TABLE public.perfiles ADD COLUMN IF NOT EXISTS moneda TEXT DEFAULT 'USD';
 -- Soporte para multi-moneda en gastos
 ALTER TABLE public.gastos ADD COLUMN IF NOT EXISTS moneda_original TEXT;
 ALTER TABLE public.gastos ADD COLUMN IF NOT EXISTS monto_original NUMERIC;
+
+-- Tabla para cachear tasas de cambio (Actualizada por n8n diariamente)
+CREATE TABLE IF NOT EXISTS public.tasas_cambio (
+  id TEXT PRIMARY KEY, -- Código ISO (USD, ARS, EUR, etc)
+  valor NUMERIC NOT NULL,
+  ultima_actualizacion TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Permisos para tasas_cambio
+ALTER TABLE public.tasas_cambio ENABLE ROW LEVEL SECURITY;
+CREATE POLICY " Cualquiera puede leer tasas\ ON public.tasas_cambio FOR SELECT USING (true);

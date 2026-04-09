@@ -47,12 +47,18 @@ const ExpenseForm = ({ onAdd, onUpdate, editingExpense, onCancelEdit }) => {
       if (formData.moneda_original === 'USD' && baseCurrency !== 'USD') {
         setIsConverting(true);
         try {
-          const res = await fetch(`https://open.er-api.com/v6/latest/USD`);
-          const data = await res.json();
-          const rate = data.rates[baseCurrency];
+          // Consultar nuestra base de datos local alimentada por n8n
+          const { data, error } = await supabase
+            .from('tasas_cambio')
+            .select('valor')
+            .eq('id', baseCurrency)
+            .single();
+
+          if (error) throw error;
+          const rate = data.valor;
+
           if (rate) {
             setExchangeRate(rate);
-            // Si ya hay un monto original, calcular el monto convertido inmediatamente
             if (formData.monto_original) {
               setFormData(prev => ({
                 ...prev,
@@ -61,7 +67,9 @@ const ExpenseForm = ({ onAdd, onUpdate, editingExpense, onCancelEdit }) => {
             }
           }
         } catch (error) {
-          console.error('Error fetching exchange rate:', error);
+          console.error('Error fetching rate from DB:', error);
+          // Fallback por si n8n aún no carga los datos: usar cambio manual o 4000
+          setExchangeRate(1);
         } finally {
           setIsConverting(false);
         }
