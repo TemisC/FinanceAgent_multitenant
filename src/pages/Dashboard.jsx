@@ -15,8 +15,15 @@ import ExpenseForm from '../components/ExpenseForm';
 import CurrencySelector from '../components/CurrencySelector';
 import { useNavigate, Link } from 'react-router-dom';
 
-const COLORS = ['#a855f7', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16', '#6366f1'];
-const categories = ['Transporte', 'Alimentación', 'Vivienda', 'Salud', 'Entretenimiento', 'Suscripciones', 'Personal', 'Educación', 'Varios'];
+const COLORS = [
+    '#a855f7', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16', '#6366f1',
+    '#f97316', '#8b5cf6', '#14b8a6', '#f43f5e', '#eab308'
+];
+const categories = [
+    'Transporte', 'Alimentación', 'Vivienda', 'Salud', 'Entretenimiento',
+    'Suscripciones', 'Personal', 'Educación', 'Varios', 'Impuestos y Servicios',
+    'Ahorro e Inversión', 'Mascotas', 'Regalos', 'Ropa y Calzado'
+];
 
 export default function Dashboard() {
     const { user, profile, signOut } = useAuth();

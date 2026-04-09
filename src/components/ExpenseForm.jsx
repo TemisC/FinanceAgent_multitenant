@@ -4,8 +4,9 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
 const categories = [
-  'Transporte', 'Alimentación', 'Vivienda', 'Salud',
-  'Entretenimiento', 'Suscripciones', 'Personal', 'Educación', 'Varios'
+  'Transporte', 'Alimentación', 'Vivienda', 'Salud', 'Entretenimiento',
+  'Suscripciones', 'Personal', 'Educación', 'Varios', 'Impuestos y Servicios',
+  'Ahorro e Inversión', 'Mascotas', 'Regalos', 'Ropa y Calzado'
 ];
 
 const ExpenseForm = ({ onAdd, onUpdate, editingExpense, onCancelEdit }) => {

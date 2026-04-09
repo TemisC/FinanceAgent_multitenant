@@ -1,4 +1,8 @@
-import { ShoppingCart, Utensils, Home, Heart, Film, CreditCard, User, GraduationCap, Package, Trash2, Edit2 } from 'lucide-react';
+import {
+  ShoppingCart, Utensils, Home, Heart, Film, CreditCard, User,
+  GraduationCap, Package, Trash2, Edit2, Receipt, PiggyBank,
+  PawPrint, Gift, Shirt
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const categoryIcons = {
@@ -10,7 +14,12 @@ const categoryIcons = {
   'Suscripciones': CreditCard,
   'Personal': User,
   'Educación': GraduationCap,
-  'Varios': Package
+  'Varios': Package,
+  'Impuestos y Servicios': Receipt,
+  'Ahorro e Inversión': PiggyBank,
+  'Mascotas': PawPrint,
+  'Regalos': Gift,
+  'Ropa y Calzado': Shirt
 };
 
 const ExpenseList = ({ expenses, loading, onDelete, onEdit }) => {
