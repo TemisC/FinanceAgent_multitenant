@@ -67,6 +67,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateCurrency = async (newCurrency) => {
+    try {
+      const { error } = await supabase
+        .from('perfiles')
+        .update({ moneda: newCurrency })
+        .eq('id', user.id);
+
+      if (!error) {
+        setProfile({ ...profile, moneda: newCurrency });
+      } else {
+        throw error;
+      }
+    } catch (e) {
+      console.error('Error updating currency:', e);
+    }
+  };
+
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
@@ -80,7 +97,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signOut, updateCurrency }}>
       {children}
     </AuthContext.Provider>
   );

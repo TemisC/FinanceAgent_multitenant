@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import StatCard from '../components/StatCard';
 import ExpenseList from '../components/ExpenseList';
 import ExpenseForm from '../components/ExpenseForm';
+import CurrencySelector from '../components/CurrencySelector';
 import { useNavigate, Link } from 'react-router-dom';
 
 const COLORS = ['#a855f7', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16', '#6366f1'];
@@ -20,6 +21,18 @@ const categories = ['Transporte', 'Alimentación', 'Vivienda', 'Salud', 'Entrete
 export default function Dashboard() {
     const { user, profile, signOut } = useAuth();
     const navigate = useNavigate();
+    const currency = profile?.moneda || 'USD';
+
+    // Helper para formatear dinero según la moneda seleccionada
+    const formatMoney = (amount) => {
+        return new Intl.NumberFormat('es-ES', {
+            style: 'currency',
+            currency: currency,
+            currencyDisplay: 'symbol',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(amount);
+    };
 
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -161,6 +174,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
+                        <CurrencySelector />
                         {profile?.rol === 'adminmaster' && (
                             <Link to="/admin" className="flex items-center gap-2 text-[10px] font-black text-amber-500 border border-amber-500/20 bg-amber-500/10 hover:bg-amber-500 hover:text-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all">
                                 <LayoutDashboard size={14} /> Admin
@@ -193,9 +207,9 @@ export default function Dashboard() {
                 </section>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                    <StatCard title="Capital Saliente" value={`$${stats.total.toLocaleString()}`} icon={TrendingUp} color="primary" />
-                    <StatCard title="Gasto Medio" value={`$${stats.avgDaily.toLocaleString()}`} icon={Zap} color="blue-500" />
-                    <StatCard title="Máximo Día" value={`$${stats.highestDay.amount.toLocaleString()}`} icon={AlertCircle} color="amber-500" />
+                    <StatCard title="Capital Saliente" value={formatMoney(stats.total)} icon={TrendingUp} color="primary" />
+                    <StatCard title="Gasto Medio" value={formatMoney(stats.avgDaily)} icon={Zap} color="blue-500" />
+                    <StatCard title="Máximo Día" value={formatMoney(stats.highestDay.amount)} icon={AlertCircle} color="amber-500" />
                     <StatCard title="Movimientos" value={stats.count} icon={History} color="emerald-500" />
                 </div>
 
@@ -265,7 +279,7 @@ export default function Dashboard() {
                                         <div key={cat.name} className="space-y-1.5">
                                             <div className="flex justify-between text-[10px] font-black uppercase tracking-tighter">
                                                 <span className="text-white/40">{cat.name}</span>
-                                                <span className="text-primary">${cat.value.toLocaleString()}</span>
+                                                <span className="text-primary">{formatMoney(cat.value)}</span>
                                             </div>
                                             <div className="h-1 bg-white/5 rounded-full overflow-hidden">
                                                 <div className="h-full bg-primary" style={{ width: `${(cat.value / stats.total) * 100}%` }} />

@@ -84,3 +84,10 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- Añadir columna de moneda a perfiles
+ALTER TABLE public.perfiles ADD COLUMN IF NOT EXISTS moneda TEXT DEFAULT 'USD';
+
+-- Soporte para multi-moneda en gastos
+ALTER TABLE public.gastos ADD COLUMN IF NOT EXISTS moneda_original TEXT;
+ALTER TABLE public.gastos ADD COLUMN IF NOT EXISTS monto_original NUMERIC;
