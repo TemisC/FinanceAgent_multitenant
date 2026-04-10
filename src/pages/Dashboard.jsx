@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-    TrendingUp, Zap, AlertCircle, History, Filter, Wallet, LayoutDashboard
+    TrendingUp, Zap, AlertCircle, History, Filter, Wallet, LayoutDashboard, X
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -48,6 +48,7 @@ export default function Dashboard() {
         total: 0, today: 0, count: 0, avgDaily: 0, topCategory: '', highestDay: { amount: 0, date: '' }
     });
     const [editingExpense, setEditingExpense] = useState(null);
+    const [selectedDayDetails, setSelectedDayDetails] = useState(null);
 
     const fetchData = async () => {
         if (!user) return;
@@ -111,6 +112,16 @@ export default function Dashboard() {
         }
     }, [user, profile, navigate]);
 
+    useEffect(() => {
+        if (selectedDayDetails) {
+            const hasExpenses = expenses.some(e =>
+                e.fecha_gasto === selectedDayDetails.fullDate &&
+                (selectedCategory === 'Todas' || e.categoria === selectedCategory)
+            );
+            if (!hasExpenses) setSelectedDayDetails(null);
+        }
+    }, [expenses, selectedCategory, selectedDayDetails]);
+
     const monthlyHistoryData = useMemo(() => {
         return Object.entries(
             expenses.reduce((acc, curr) => {
@@ -133,7 +144,7 @@ export default function Dashboard() {
                 .filter(e => e.fecha_gasto === dateStr && (selectedCategory === 'Todas' || e.categoria === selectedCategory))
                 .reduce((acc, curr) => acc + parseFloat(curr.monto), 0);
 
-            return { date: format(day, 'dd/MM'), monto: dayTotal };
+            return { date: format(day, 'dd/MM'), monto: dayTotal, fullDate: dateStr };
         });
     }, [expenses, selectedCategory]);
 
@@ -241,22 +252,69 @@ export default function Dashboard() {
                                     </select>
                                 </div>
                             </div>
-                            <div className="h-[300px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={dailyTimelineData}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.01)" />
-                                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} />
-                                        <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #111', borderRadius: '16px' }} />
-                                        <Bar dataKey="monto" fill="url(#picoGrad)" radius={[4, 4, 0, 0]} />
-                                        <defs>
-                                            <linearGradient id="picoGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor="#a855f7" />
-                                                <stop offset="100%" stopColor="#3b82f6" />
-                                            </linearGradient>
-                                        </defs>
-                                    </BarChart>
-                                </ResponsiveContainer>
+                            <div className="h-[300px] relative">
+                                {selectedDayDetails ? (
+                                    <div className="absolute inset-0 bg-black/20 backdrop-blur-sm rounded-3xl flex flex-col p-2">
+                                        <div className="flex justify-between items-center mb-4 px-2">
+                                            <div>
+                                                <h4 className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-2">
+                                                    Resumen: <span className="text-primary">{selectedDayDetails.date}</span>
+                                                </h4>
+                                                <p className="text-[10px] text-muted-foreground font-bold">
+                                                    Total del día: {formatMoney(
+                                                        expenses
+                                                            .filter(e => e.fecha_gasto === selectedDayDetails.fullDate && (selectedCategory === 'Todas' || e.categoria === selectedCategory))
+                                                            .reduce((acc, curr) => acc + parseFloat(curr.monto), 0)
+                                                    )}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => setSelectedDayDetails(null)}
+                                                className="p-2 hover:bg-white/5 rounded-full transition-colors text-white/40 hover:text-white"
+                                            >
+                                                <X size={18} />
+                                            </button>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+                                            <ExpenseList
+                                                expenses={expenses.filter(e => e.fecha_gasto === selectedDayDetails.fullDate && (selectedCategory === 'Todas' || e.categoria === selectedCategory))}
+                                                loading={false}
+                                                onDelete={handleDelete}
+                                                onEdit={setEditingExpense}
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={dailyTimelineData}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.01)" />
+                                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} />
+                                            <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #111', borderRadius: '16px' }} />
+                                            <Bar
+                                                dataKey="monto"
+                                                fill="url(#picoGrad)"
+                                                radius={[4, 4, 0, 0]}
+                                                style={{ cursor: 'pointer' }}
+                                                onClick={(data) => {
+                                                    if (data && data.monto > 0) {
+                                                        setSelectedDayDetails({
+                                                            date: data.date,
+                                                            fullDate: data.fullDate,
+                                                            total: data.monto
+                                                        });
+                                                    }
+                                                }}
+                                            />
+                                            <defs>
+                                                <linearGradient id="picoGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor="#a855f7" />
+                                                    <stop offset="100%" stopColor="#3b82f6" />
+                                                </linearGradient>
+                                            </defs>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                )}
                             </div>
                         </div>
 
