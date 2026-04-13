@@ -218,14 +218,17 @@ export default function Admin() {
                                             {u.rol !== 'adminmaster' && (
                                                 <div className="inline-flex items-center gap-4">
                                                     <div className="flex items-center gap-3 bg-black/40 p-1.5 rounded-2xl border border-white/5">
-                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 ${u.estado_suscripcion === 'banned' ? 'text-red-500' : 'text-white/20'}`}>Baneado</span>
+                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 ${u.estado_suscripcion === 'banned' || u.estado_suscripcion === 'expired' ? 'text-red-500' : 'text-white/20'}`}>Bloqueado</span>
                                                         <button
-                                                            onClick={() => updateStatus(u.id, u.estado_suscripcion === 'banned' ? 'active' : 'banned')}
-                                                            className={`relative w-12 h-6 rounded-full transition-all duration-300 ${u.estado_suscripcion === 'banned' ? 'bg-red-500/20' : 'bg-emerald-500/20'}`}
+                                                            onClick={() => {
+                                                                const isActive = u.estado_suscripcion === 'active' || u.estado_suscripcion === 'trial';
+                                                                updateStatus(u.id, isActive ? 'banned' : 'active');
+                                                            }}
+                                                            className={`relative w-12 h-6 rounded-full transition-all duration-300 ${u.estado_suscripcion === 'banned' || u.estado_suscripcion === 'expired' ? 'bg-red-500/20' : 'bg-emerald-500/20'}`}
                                                         >
-                                                            <div className={`absolute top-1 w-4 h-4 rounded-full transition-all duration-300 ${u.estado_suscripcion === 'banned' ? 'left-1 bg-red-500' : 'right-1 bg-emerald-500'}`} />
+                                                            <div className={`absolute top-1 w-4 h-4 rounded-full transition-all duration-300 ${u.estado_suscripcion === 'banned' || u.estado_suscripcion === 'expired' ? 'left-1 bg-red-500' : 'right-1 bg-emerald-500'}`} />
                                                         </button>
-                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 ${u.estado_suscripcion !== 'banned' ? 'text-emerald-500' : 'text-white/20'}`}>Activo</span>
+                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 ${u.estado_suscripcion === 'active' || u.estado_suscripcion === 'trial' ? 'text-emerald-500' : 'text-white/20'}`}>Acceso OK</span>
                                                     </div>
 
                                                     <button onClick={() => deleteUser(u.id)} className="p-2 text-white/20 hover:text-red-500 transition-colors" title="Borrar Permanente">
