@@ -160,14 +160,43 @@ export default function Dashboard() {
         navigate('/login');
     };
 
-    if (profile?.estado_suscripcion === 'banned' || profile?.estado_suscripcion === 'expired') {
+    if (profile?.estado_suscripcion === 'banned') {
         return (
             <div className="min-h-screen bg-[#080808] flex items-center justify-center p-6 font-sans text-center">
                 <div className="bg-[#111] border border-red-500/30 p-12 rounded-[48px] shadow-2xl relative z-10 max-w-md">
                     <AlertCircle className="text-red-500 mx-auto mb-6" size={48} />
-                    <h2 className="text-2xl font-black text-white uppercase italic tracking-widest mb-4">Suscripción Inactiva</h2>
-                    <p className="text-muted-foreground mb-8">Tu cuenta está actualmente suspendida o expirada. Por favor, renueva tu suscripción para continuar usando FinanceAgent.</p>
+                    <h2 className="text-2xl font-black text-white uppercase italic tracking-widest mb-4">Cuenta Suspendida</h2>
+                    <p className="text-muted-foreground mb-8">Tu acceso ha sido revocado por el administrador. Contacta con soporte si crees que esto es un error.</p>
                     <button onClick={handleLogout} className="bg-red-500/10 text-red-500 border border-red-500/20 font-black py-4 px-8 rounded-2xl w-full hover:bg-red-500 hover:text-white transition-all uppercase tracking-widest text-sm">Cerrar Sesión</button>
+                </div>
+            </div>
+        );
+    }
+
+    if (profile?.estado_suscripcion === 'expired') {
+        return (
+            <div className="min-h-screen bg-[#080808] flex items-center justify-center p-6 font-sans text-center">
+                <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-30">
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full" />
+                </div>
+                <div className="bg-[#111] border border-primary/20 p-12 rounded-[48px] shadow-2xl relative z-10 max-w-md">
+                    <div className="bg-primary/10 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+                        <History className="text-primary" size={40} />
+                    </div>
+                    <h2 className="text-3xl font-black text-white uppercase italic tracking-tighter mb-4">¡Tus datos están a salvo!</h2>
+                    <p className="text-muted-foreground font-medium mb-8 leading-relaxed">
+                        Tu suscripción ha expirado, pero no te preocupes: seguimos guardando todos tus gastos vía Telegram. <br /><br />
+                        <span className="text-white">Activa tu Dashboard</span> para desbloquear tus gráficas y análisis detallados.
+                    </p>
+                    <a
+                        href="https://despegando.gumroad.com/l/financeagent"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-primary text-white font-black py-5 px-8 rounded-2xl w-full block hover:scale-105 transition-all uppercase tracking-widest text-sm mb-6 shadow-lg shadow-primary/20"
+                    >
+                        Renovar Acceso Ahora
+                    </a>
+                    <button onClick={handleLogout} className="text-[10px] font-black text-white/20 hover:text-white uppercase tracking-[0.2em] transition-all">Cerrar Sesión / Switch Account</button>
                 </div>
             </div>
         );

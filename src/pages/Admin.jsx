@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Users, LayoutDashboard, Shield, AlertTriangle, CheckCircle, Search, Trash2 } from 'lucide-react';
+import { Users, LayoutDashboard, Shield, AlertTriangle, CheckCircle, Search, Trash2, Crown, ToggleLeft, ToggleRight, XCircle } from 'lucide-react';
 
 export default function Admin() {
     const { user, profile, loading } = useAuth();
@@ -59,6 +59,19 @@ export default function Admin() {
         const { error } = await supabase
             .from('perfiles')
             .update({ estado_suscripcion: newStatus })
+            .eq('id', userId);
+
+        if (!error) {
+            fetchUsers();
+        } else {
+            alert('Error: ' + error.message);
+        }
+    };
+
+    const toggleVip = async (userId, currentVip) => {
+        const { error } = await supabase
+            .from('perfiles')
+            .update({ es_vip: !currentVip })
             .eq('id', userId);
 
         if (!error) {
@@ -144,8 +157,8 @@ export default function Admin() {
                                     <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50">Rol</th>
                                     <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50">Estado</th>
                                     <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50">Última Actividad</th>
-                                    <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50">Registrado</th>
-                                    <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50 text-right">Acciones</th>
+                                    <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50 text-center">VIP</th>
+                                    <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50 text-right">Acciones (Acceso)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -190,18 +203,35 @@ export default function Admin() {
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="p-6 text-xs text-white/50 font-medium">
-                                            {new Date(u.fecha_registro).toLocaleDateString()}
-                                        </td>
-                                        <td className="p-6 text-right space-x-2">
+                                        <td className="p-6 text-center">
                                             {u.rol !== 'adminmaster' && (
-                                                <>
-                                                    <button onClick={() => updateStatus(u.id, 'active')} className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white px-3 py-1.5 rounded transition-colors">Activar</button>
-                                                    <button onClick={() => updateStatus(u.id, 'banned')} className="text-[10px] font-black uppercase tracking-widest bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded transition-colors">Banear</button>
-                                                    <button onClick={() => deleteUser(u.id)} className="text-[10px] font-black uppercase tracking-widest bg-white/5 text-white/30 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded transition-all group-hover:opacity-100">
-                                                        <Trash2 size={14} />
+                                                <button
+                                                    onClick={() => toggleVip(u.id, u.es_vip)}
+                                                    className={`p-2 rounded-xl transition-all ${u.es_vip ? 'bg-amber-500/20 text-amber-500 shadow-lg shadow-amber-500/10 scale-110' : 'text-white/10 hover:text-white/30'}`}
+                                                    title={u.es_vip ? "Quitar VIP" : "Hacer VIP (Vitalicio)"}
+                                                >
+                                                    <Crown size={20} fill={u.es_vip ? "currentColor" : "none"} />
+                                                </button>
+                                            )}
+                                        </td>
+                                        <td className="p-6 text-right space-x-4">
+                                            {u.rol !== 'adminmaster' && (
+                                                <div className="inline-flex items-center gap-4">
+                                                    <div className="flex items-center gap-3 bg-black/40 p-1.5 rounded-2xl border border-white/5">
+                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 ${u.estado_suscripcion === 'banned' ? 'text-red-500' : 'text-white/20'}`}>Baneado</span>
+                                                        <button
+                                                            onClick={() => updateStatus(u.id, u.estado_suscripcion === 'banned' ? 'active' : 'banned')}
+                                                            className={`relative w-12 h-6 rounded-full transition-all duration-300 ${u.estado_suscripcion === 'banned' ? 'bg-red-500/20' : 'bg-emerald-500/20'}`}
+                                                        >
+                                                            <div className={`absolute top-1 w-4 h-4 rounded-full transition-all duration-300 ${u.estado_suscripcion === 'banned' ? 'left-1 bg-red-500' : 'right-1 bg-emerald-500'}`} />
+                                                        </button>
+                                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 ${u.estado_suscripcion !== 'banned' ? 'text-emerald-500' : 'text-white/20'}`}>Activo</span>
+                                                    </div>
+
+                                                    <button onClick={() => deleteUser(u.id)} className="p-2 text-white/20 hover:text-red-500 transition-colors" title="Borrar Permanente">
+                                                        <Trash2 size={16} />
                                                     </button>
-                                                </>
+                                                </div>
                                             )}
                                         </td>
                                     </tr>
