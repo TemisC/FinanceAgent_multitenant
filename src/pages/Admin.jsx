@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Users, LayoutDashboard, Shield, AlertTriangle, CheckCircle, Search, Trash2, Crown, ToggleLeft, ToggleRight, XCircle } from 'lucide-react';
+import { Users, LayoutDashboard, Shield, AlertTriangle, CheckCircle, Search, Trash2, Crown, ToggleLeft, ToggleRight, XCircle, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function Admin() {
     const { user, profile, loading } = useAuth();
     const [users, setUsers] = useState([]);
     const [fetching, setFetching] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortOrder, setSortOrder] = useState('asc');
+    const [sortBy, setSortBy] = useState('fecha_expiracion');
 
     const fetchUsers = async () => {
         setFetching(true);
@@ -79,6 +81,19 @@ export default function Admin() {
         } else {
             alert('Error: ' + error.message);
         }
+    };
+
+    const toggleSort = (field) => {
+        const order = sortOrder === 'asc' ? 'desc' : 'asc';
+        setSortOrder(order);
+        setSortBy(field);
+
+        const sorted = [...users].sort((a, b) => {
+            const valA = a[field] ? new Date(a[field]) : new Date(0);
+            const valB = b[field] ? new Date(b[field]) : new Date(0);
+            return order === 'asc' ? valA - valB : valB - valA;
+        });
+        setUsers(sorted);
     };
 
     const deleteUser = async (userId) => {
@@ -157,6 +172,17 @@ export default function Admin() {
                                     <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50">Rol</th>
                                     <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50">Estado</th>
                                     <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50">Última Actividad</th>
+                                    <th
+                                        className="p-6 text-xs font-black uppercase tracking-widest text-primary cursor-pointer hover:text-white transition-colors"
+                                        onClick={() => toggleSort('fecha_expiracion')}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            Próximo Pago
+                                            {sortBy === 'fecha_expiracion' ? (
+                                                sortOrder === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />
+                                            ) : <ArrowUpDown size={12} className="opacity-30" />}
+                                        </div>
+                                    </th>
                                     <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50 text-center">VIP</th>
                                     <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50 text-right">Acciones (Acceso)</th>
                                 </tr>
@@ -201,6 +227,14 @@ export default function Admin() {
                                                         {new Date(u.ultima_actividad).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                 )}
+                                            </div>
+                                        </td>
+                                        <td className="p-6">
+                                            <div className="flex flex-col">
+                                                <span className={`text-xs font-bold ${u.es_vip ? 'text-amber-500/50 italic' : 'text-white'}`}>
+                                                    {u.fecha_expiracion ? new Date(u.fecha_expiracion).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '---'}
+                                                </span>
+                                                {u.estado_suscripcion === 'expired' && <span className="text-[9px] text-red-500 font-black uppercase">Expirado</span>}
                                             </div>
                                         </td>
                                         <td className="p-6 text-center">
