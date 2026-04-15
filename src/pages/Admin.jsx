@@ -10,7 +10,7 @@ export default function Admin() {
     const [fetching, setFetching] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortOrder, setSortOrder] = useState('asc');
-    const [sortBy, setSortBy] = useState('fecha_expiracion');
+    const [sortBy, setSortBy] = useState('fecha_vencimiento');
 
     const fetchUsers = async () => {
         setFetching(true);
@@ -174,11 +174,11 @@ export default function Admin() {
                                     <th className="p-6 text-xs font-black uppercase tracking-widest text-white/50">Última Actividad</th>
                                     <th
                                         className="p-6 text-xs font-black uppercase tracking-widest text-primary cursor-pointer hover:text-white transition-colors"
-                                        onClick={() => toggleSort('fecha_expiracion')}
+                                        onClick={() => toggleSort('fecha_vencimiento')}
                                     >
                                         <div className="flex items-center gap-2">
                                             Próximo Pago
-                                            {sortBy === 'fecha_expiracion' ? (
+                                            {sortBy === 'fecha_vencimiento' ? (
                                                 sortOrder === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />
                                             ) : <ArrowUpDown size={12} className="opacity-30" />}
                                         </div>
@@ -232,7 +232,7 @@ export default function Admin() {
                                         <td className="p-6">
                                             <div className="flex flex-col">
                                                 <span className={`text-xs font-bold ${u.es_vip ? 'text-amber-500/50 italic' : 'text-white'}`}>
-                                                    {u.fecha_expiracion ? new Date(u.fecha_expiracion).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '---'}
+                                                    {u.fecha_vencimiento ? new Date(u.fecha_vencimiento).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '---'}
                                                 </span>
                                                 {u.estado_suscripcion === 'expired' && <span className="text-[9px] text-red-500 font-black uppercase">Expirado</span>}
                                             </div>

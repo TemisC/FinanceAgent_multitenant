@@ -102,3 +102,20 @@ CREATE TABLE IF NOT EXISTS public.tasas_cambio (
 -- Permisos para tasas_cambio
 ALTER TABLE public.tasas_cambio ENABLE ROW LEVEL SECURITY;
 CREATE POLICY " Cualquiera puede leer tasas\ ON public.tasas_cambio FOR SELECT USING (true);
+
+-- Gestión de Suscripciones y Vencimientos
+ALTER TABLE public.perfiles ADD COLUMN IF NOT EXISTS fecha_vencimiento DATE;
+
+-- Vista para aviso de Trial (3 días antes)
+CREATE OR REPLACE VIEW public.usuarios_proximos_vencer AS
+SELECT id, telegram_chat_id, email, fecha_vencimiento, estado_suscripcion
+FROM public.perfiles
+WHERE estado_suscripcion = 'trial' 
+AND (fecha_vencimiento - INTERVAL '3 days') = CURRENT_DATE;
+
+-- Vista para aviso de Clientes Pagos (2 días antes)
+CREATE OR REPLACE VIEW public.recordatorios_clientes_pagos AS
+SELECT id, telegram_chat_id, email, fecha_vencimiento, estado_suscripcion
+FROM public.perfiles
+WHERE estado_suscripcion = 'active' 
+AND (fecha_vencimiento - INTERVAL '2 days') = CURRENT_DATE;

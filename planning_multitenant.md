@@ -1,7 +1,7 @@
 ---
 title: Multi-tenant SaaS Migration Plan - FinanceAgent
-date: 2026-04-05
-version: 1.0
+date: 2026-04-15
+version: 1.2
 ---
 
 # Plan de Migración a SaaS Multi-Tenant: FinanceAgent 🚀
@@ -47,14 +47,37 @@ Este flujo está diseñado para el usuario que descubre la app a través del bot
 
 1.  **Usuario envía primer mensaje (ej: "Pizza 15") a n8n.**
 2.  **n8n verifica:** Busca el `chat_id` en la tabla `perfiles`.
-3.  **Si NO existe (Registro Automático):**
+3.  **Si NO existe (Registro Automático + Trial 30 días):**
     *   n8n genera una contraseña segura aleatoria.
-    *   n8n interroga al usuario por Telegram: *"¡Bienvenido! ¿Cuál es tu email para crear tu cuenta en el Dashboard?"*.
-    *   n8n recibe el email e invoca la [API Admin de Supabase](https://supabase.com/docs/reference/javascript/auth-admin-createuser) para crear el usuario en `auth.users`.
-    *   n8n guarda el `chat_id` y el `user_id` en `perfiles`.
-    *   n8n graba el gasto.
-    *   n8n envía un **Email** (y un mensaje de Telegram) al usuario: *"Tu cuenta está lista. Accede a app.financeagent.com con este Email y Contraseña: [pwd]"*.
-4.  **Si existe:** Procedimiento normal (registra el gasto under su `user_id`).
+    *   n8n solicita el email vía Telegram.
+    *   n8n invoca la API Admin de Supabase para crear el usuario.
+    *   n8n guarda el `chat_id`, `user_id` y establece `estado_suscripcion = 'trial'`.
+    *   **Mensaje de Bienvenida Crítico:** Se envía un mensaje con:
+        *   Confirmación de registro.
+        *   Credenciales de acceso al Dashboard.
+        *   **Fecha exacta de vencimiento del Trial** (Fecha de hoy + 30 días).
+        *   Aviso de que recibirá un recordatorio 3 días antes del vencimiento.
+4.  **Si existe:** Procedimiento normal (registra el gasto).
+
+---
+
+## 4. Gestión de Renovaciones y Alertas 🔔
+
+Para asegurar la retención de usuarios, se implementa un sistema de notificaciones automáticas.
+
+### a. Flujo Diario de Recordatorios (Cron Job)
+Un workflow de n8n se ejecuta cada 24 horas para identificar usuarios próximos a vencer:
+
+1.  **Consulta SQL:** Busca perfiles en estado `trial` o `active` cuya fecha de vencimiento sea en 3 días.
+2.  **Envío de Alerta:**
+    *   **Usuarios Trial:** Mensaje invitando a suscribirse para no perder sus datos, con link directo a Gumroad (sin trial adicional en el link).
+    *   **Usuarios Recurrentes:** Mensaje de agradecimiento por su fidelidad y recordatorio de renovación.
+
+### b. Integración con Gumroad (Post-Trial)
+El link de suscripción ya no ofrece trial (pues el usuario ya lo consumió). Al pagar:
+1.  Gumroad dispara un Webhook.
+2.  n8n recibe el pago, identifica al usuario por Email/ID.
+3.  Actualiza `estado_suscripcion = 'active'`.
 
 ### Flujo 2: Registro Web (Alta Tradicional)
 Para usuarios que no usan Telegram inicialmente.
@@ -92,25 +115,62 @@ Solo visible si el `rol` de `perfiles` es `admin`.
 
 Cuando clones este repositorio para iniciar la versión multi-tenant, sigue el siguiente orden:
 
-1.  **Fase 1: Re-cimentación (Supabase)**
+1.  **Fase 1: Re-cimentación (Supabase) ✅**
     *   Destruir la tabla `gastos` actual.
     *   Habilitar Supabase Auth.
     *   Crear migraciones SQL para `perfiles` y la nueva `gastos` con `user_id`.
     *   Escribir y probar arduamente las Políticas RLS.
 
-2.  **Fase 2: Autenticación Web (Frontend)**
+2.  **Fase 2: Autenticación Web (Frontend) ✅**
     *   Instalar `react-router-dom`.
     *   Construir ventanas de Login y Register.
     *   Ajustar `App.jsx` para que solo cargue datos del usuario logueado (`supabase.auth.getUser()`).
 
-3.  **Fase 3: n8n Master Logic (Backend)**
+3.  **Fase 3: n8n Master Logic (Backend) ✅**
     *   Reemplazar el webhook simple por un proceso de enrutamiento condicional (Switch node en n8n).
     *   Configurar n8n con la llave de acceso *Service Role* de Supabase para permitirle crear cuentas y saltearse el RLS al insertar `chat_ids`.
-    *   Implementar el nodo de envío de emails (vía SendGrid, SMTP, etc.).
+    *   Implementar el nodo de envío de emails.
 
-4.  **Fase 4: Panel del Rey (Admin Dashboard)**
-    *   Construir la ruta oculta `/admin`.
-    *   Implementar funciones de suspender cuentas.
+4.  **Fase 4: Panel del Rey (Admin Dashboard) ✅**
+    *   Construir la ruta `/admin` protegida para administradores.
+    *   Visualización de lista de usuarios con timestamps de "última actividad".
+    *   Funcionalidad de borrado de usuarios y toggles de estado VIP.
+
+5.  **Fase 5: Automatización y Pagos (SaaS Maturity) 🚀**
+    *   **Workflow "Verdugo":** Automatización en n8n para expiración diaria de usuarios basada en fecha.
+    *   **Integración Gumroad:** Webhooks para procesar pagos y reactivar cuentas automáticamente.
+    *   **Dashboard Financiero:** Drill-down en gráficos para ver detalle diario de gastos.
+
+6.  **Fase 6: Sistema Multi-moneda y Globalización 🌍**
+    *   Soporte para múltiples divisas (USD/Local).
+    *   Actualización automática de tasas de cambio vía n8n hacia tabla de Supabase.
+    *   Conversión integrada en Dashboard y Bot de Telegram.
+
+---
+
+## Módulos y Mejoras Recientes
+
+### 🤖 n8n "Verdugo" & Suscripciones
+Se implementó un workflow maestro en n8n que corre diariamente para:
+*   Identificar usuarios con suscripción vencida.
+*   Cambiar su estado a `expired`.
+*   Enviar notificaciones automáticas.
+
+### 💳 Integración con Gumroad
+Sincronización total con la pasarela de pagos:
+*   Registro automático de ventas.
+*   Vinculación inmediata con el `user_id` de FinanceAgent.
+*   Reactivación de cuentas sin intervención manual.
+
+### 💱 Sistema de Tasas de Cambio
+*   Tabla `exchange_rates` en Supabase.
+*   Workflow n8n que actualiza valores diariamente desde APIs externas.
+*   Cálculo de gastos en USD convertidos a moneda local en tiempo real.
+
+### 📊 UX & Analytics
+*   Gráficos interactivos con vista detallada por día.
+*   Categorías expandidas para mayor granularidad en el reporte ("Gastos del Negocio", etc.).
+*   Login simplificado permitiendo el acceso vía Telegram ID para usuarios recurrentes.
 
 ---
 
