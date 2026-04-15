@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Navigate, Link } from 'react-router-dom';
-import { Users, Shield, Search, Trash2, Crown, CheckCircle, AlertTriangle, TrendingUp, DollarSign, Activity, PieChart as PieIcon, UserPlus, LayoutDashboard, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+import { Users, Shield, Search, Trash2, Crown, Activity, PieChart as PieIcon, UserPlus, ArrowUpDown, ChevronDown, ChevronUp, DollarSign, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export default function Admin() {
     const { user, profile, loading } = useAuth();
-    const [activeTab, setActiveTab] = useState('kpis'); // 'kpis' or 'users'
+    const [activeTab, setActiveTab] = useState('kpis');
     const [users, setUsers] = useState([]);
     const [stats, setStats] = useState({ totalRevenue: 0, activeUsers: 0, trialUsers: 0, conversionRate: 0 });
     const [chartData, setChartData] = useState([]);
     const [fetching, setFetching] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortOrder, setSortOrder] = useState('asc'); // 'asc' | 'desc'
+    const [sortBy, setSortBy] = useState('fecha_vencimiento');
 
     const fetchAdminData = async () => {
         setFetching(true);
@@ -69,10 +71,16 @@ export default function Admin() {
     };
 
     const deleteUser = async (id) => {
-        if (confirm('¿Eliminar definitivamente este usuario y todos sus datos?')) {
+        if (confirm('¿Eliminar definitivamente este usuario?')) {
             const { error } = await supabase.from('perfiles').delete().eq('id', id);
             if (!error) fetchAdminData();
         }
+    };
+
+    const toggleSort = (field) => {
+        const order = sortBy === field && sortOrder === 'asc' ? 'desc' : 'asc';
+        setSortOrder(order);
+        setSortBy(field);
     };
 
     const getHoursSince = (dateString) => {
@@ -97,13 +105,22 @@ export default function Admin() {
         { name: 'Banned', value: users.filter(u => u.estado_suscripcion === 'banned').length },
     ];
 
-    const filteredUsers = users.filter(u =>
+    const sortedUsers = [...users].sort((a, b) => {
+        if (sortBy === 'fecha_vencimiento') {
+            const dateA = a.fecha_vencimiento ? new Date(a.fecha_vencimiento) : new Date(8640000000000000); // Max date if null
+            const dateB = b.fecha_vencimiento ? new Date(b.fecha_vencimiento) : new Date(8640000000000000);
+            return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+        }
+        return 0;
+    });
+
+    const filteredUsers = sortedUsers.filter(u =>
         u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (u.telegram_chat_id && u.telegram_chat_id.includes(searchTerm))
     );
 
     return (
-        <div className="min-h-screen bg-[#080808] text-foreground font-sans selection:bg-amber-500/30">
+        <div className="min-h-screen bg-[#080808] text-foreground font-sans">
             <header className="border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -135,7 +152,6 @@ export default function Admin() {
             <main className="max-w-7xl mx-auto px-6 py-10">
                 {activeTab === 'kpis' ? (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {/* KPIs */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                             <div className="bg-[#111] p-6 rounded-[32px] border border-white/5 flex flex-col justify-between">
                                 <div className="flex items-center justify-between mb-4">
@@ -167,11 +183,10 @@ export default function Admin() {
                             </div>
                         </div>
 
-                        {/* Charts */}
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
                             <div className="lg:col-span-8 bg-[#111] p-8 rounded-[40px] border border-white/5">
                                 <h3 className="text-xs font-black text-white/40 uppercase tracking-widest mb-8 flex items-center gap-2 italic">
-                                    <TrendingUp size={14} className="text-amber-500" /> Crecimiento de Usuarios (Últimos 15 días)
+                                    <TrendingUp size={14} className="text-amber-500" /> Crecimiento de Usuarios
                                 </h3>
                                 <div className="h-[300px]">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -179,7 +194,7 @@ export default function Admin() {
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#222" />
                                             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 10, fontWeight: 'bold' }} />
                                             <YAxis axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 10 }} />
-                                            <Tooltip contentStyle={{ backgroundColor: '#000', borderRadius: '16px', border: '1px solid #222', padding: '12px' }} />
+                                            <Tooltip contentStyle={{ backgroundColor: '#000', borderRadius: '16px', border: '1px solid #222' }} />
                                             <Bar dataKey="count" fill="#f59e0b" radius={[6, 6, 0, 0]} />
                                         </BarChart>
                                     </ResponsiveContainer>
@@ -187,7 +202,7 @@ export default function Admin() {
                             </div>
                             <div className="lg:col-span-4 bg-[#111] p-8 rounded-[40px] border border-white/5">
                                 <h3 className="text-xs font-black text-white/40 uppercase tracking-widest mb-8 flex items-center gap-2 italic">
-                                    <PieIcon size={14} className="text-blue-500" /> Distribución de Estados
+                                    <PieIcon size={14} className="text-blue-500" /> Distribución
                                 </h3>
                                 <div className="h-[250px]">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -212,7 +227,6 @@ export default function Admin() {
                     </div>
                 ) : (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {/* Search & Header */}
                         <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
                             <div className="flex items-center gap-3">
                                 <Shield className="text-amber-500" size={32} />
@@ -230,7 +244,6 @@ export default function Admin() {
                             </div>
                         </div>
 
-                        {/* Full Table */}
                         <div className="bg-[#111] rounded-[40px] border border-white/5 overflow-hidden shadow-2xl relative">
                             {fetching && (
                                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -243,7 +256,17 @@ export default function Admin() {
                                         <tr className="bg-black/50 text-white/30 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5">
                                             <th className="p-6">Información Inquilino</th>
                                             <th className="p-6">Estado</th>
-                                            <th className="p-6">Vencimiento</th>
+                                            <th
+                                                className="p-6 cursor-pointer hover:text-white transition-colors group"
+                                                onClick={() => toggleSort('fecha_vencimiento')}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    Vencimiento
+                                                    {sortBy === 'fecha_vencimiento' ? (
+                                                        sortOrder === 'asc' ? <ChevronUp size={12} className="text-amber-500" /> : <ChevronDown size={12} className="text-amber-500" />
+                                                    ) : <ArrowUpDown size={12} className="opacity-30 group-hover:opacity-100" />}
+                                                </div>
+                                            </th>
                                             <th className="p-6">Actividad</th>
                                             <th className="p-6 text-center">VIP</th>
                                             <th className="p-6 text-right">Control de Acceso</th>
@@ -267,7 +290,7 @@ export default function Admin() {
                                                     </span>
                                                 </td>
                                                 <td className="p-6">
-                                                    <p className="text-xs font-bold text-white/80">
+                                                    <p className={`text-xs font-bold ${u.estado_suscripcion === 'expired' ? 'text-red-500' : 'text-white/80'}`}>
                                                         {u.fecha_vencimiento ? new Date(u.fecha_vencimiento).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '---'}
                                                     </p>
                                                 </td>
