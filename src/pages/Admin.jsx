@@ -38,7 +38,7 @@ export default function Admin() {
             const conversion = profiles.length > 0 ? ((active / profiles.length) * 100).toFixed(1) : 0;
 
             const { data: sales } = await supabase.from('ventas').select('monto');
-            const revenue = sales?.reduce((acc, curr) => acc + parseFloat(curr.monto), 0) || (active * 5);
+            const revenue = sales?.reduce((acc, curr) => acc + parseFloat(curr.monto), 0) || 0;
 
             setStats({ totalRevenue: revenue, activeUsers: active, trialUsers: trials, conversionRate: conversion });
 
@@ -283,8 +283,8 @@ export default function Admin() {
                                                 </td>
                                                 <td className="p-6">
                                                     <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${u.estado_suscripcion === 'active' ? 'bg-emerald-500/10 text-emerald-500' :
-                                                            u.estado_suscripcion === 'trial' ? 'bg-blue-500/10 text-blue-500' :
-                                                                u.estado_suscripcion === 'banned' ? 'bg-red-500/10 text-red-500' : 'bg-white/10 text-white/40'
+                                                        u.estado_suscripcion === 'trial' ? 'bg-blue-500/10 text-blue-500' :
+                                                            u.estado_suscripcion === 'banned' ? 'bg-red-500/10 text-red-500' : 'bg-white/10 text-white/40'
                                                         }`}>
                                                         {u.estado_suscripcion}
                                                     </span>

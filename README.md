@@ -1,16 +1,23 @@
-# React + Vite
+# 🚀 FinanceAgent - SaaS Finance Automation
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+FinanceAgent es una plataforma SaaS diseñada para el control inteligente de gastos personales a través de Telegram y una Web App premium.
 
-Currently, two official plugins are available:
+## 🛠 Stack Tecnológico
+*   **Frontend:** React + Vite + Tailwind CSS + Recharts
+*   **Backend / DB:** Supabase (Auth, RLS, SQL)
+*   **Automation:** n8n (Orquestación de Telegram y Pagos)
+*   **Payments:** Gumroad
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 📝 Tareas Pendientes (Backlog Crítico)
 
-## React Compiler
+### 🔴 Integración de Ingresos Reales (n8n + Gumroad)
+*   **Situación:** El Dashboard Financiero ya está programado para leer datos reales.
+*   **Debe:** Configurar el flujo en n8n para que las ventas de Gumroad inserten filas en la tabla `public.ventas`.
+*   **Campos Clave:** `user_id` (vía búsqueda de email) y `monto` (valor pagado).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🟠 Sistema de Renovación Automática
+*   **Situación:** Pendiente de pruebas.
+*   **Debe:** Validar que el webhook de renovación de Gumroad actualice la columna `fecha_vencimiento` sumando el periodo correspondiente.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+Para más detalles sobre la arquitectura y fases, consultar [planning_multitenant.md](./planning_multitenant.md).

@@ -177,3 +177,16 @@ SincronizaciÃ³n total con la pasarela de pagos:
 ## Consideraciones CrÃ­ticas
 *   **Seguridad n8n:** El flujo de n8n manejarÃ¡ contraseÃ±as y creaciÃ³n de usuarios. Las credenciales que n8n usa para hablar con Supabase deben ser del tipo `service_role key` (no la pÃºblica que usa el frontend).
 *   **Tokens Telegram:** El Bot Father te da un solo token. n8n procesarÃ¡ TODOS los mensajes entrantes de TODOS los usuarios. Por esto es vital el ruteo interno basado en el `chat_id`.
+
+---
+
+## ?? Tareas Pendientes (Backlog de Automatización)
+
+### 1. Sincronización de Ingresos Reales (n8n + Gumroad)
+*   **Estado:** Dashboard listo, falta conexión Backend.
+*   **Acción:** Configurar nodo de **Supabase (Insert Row)** en n8n para la tabla \public.ventas\.
+*   **Detalle:** El trigger debe ser el Webhook de Pago Exitoso de Gumroad. Se debe mapear el monto al campo \monto\ y buscar el \user_id\ por el email del comprador.
+
+### 2. Validación de Webhook de Renovación
+*   **Estado:** Planeado.
+*   **Acción:** Asegurar que cuando un usuario renueva su suscripción anual/mensual, n8n extienda la \echa_vencimiento\ sumando 30 días adicionales a la fecha actual.
