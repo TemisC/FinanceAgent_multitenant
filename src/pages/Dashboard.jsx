@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-    TrendingUp, Zap, AlertCircle, History, Filter, Wallet, LayoutDashboard, X
+    TrendingUp, Zap, AlertCircle, History, Filter, Wallet, LayoutDashboard, X, Printer
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell
 } from 'recharts';
-import { format, eachDayOfInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { format, eachDayOfInterval, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import StatCard from '../components/StatCard';
@@ -41,12 +41,11 @@ export default function Dashboard() {
         }).format(amount);
     };
 
-    const [expenses, setExpenses] = useState([]);
+    const [allExpenses, setAllExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState('Todas');
-    const [stats, setStats] = useState({
-        total: 0, today: 0, count: 0, avgDaily: 0, topCategory: '', highestDay: { amount: 0, date: '' }
-    });
+    const [useSmartScale, setUseSmartScale] = useState(true);
+    const [dateFilter, setDateFilter] = useState('mes');
     const [editingExpense, setEditingExpense] = useState(null);
     const [selectedDayDetails, setSelectedDayDetails] = useState(null);
 
@@ -61,36 +60,59 @@ export default function Dashboard() {
                 .order('fecha_gasto', { ascending: false });
 
             if (error) throw error;
-            const allExpenses = data || [];
-            setExpenses(allExpenses);
-
-            const total = allExpenses.reduce((acc, curr) => acc + parseFloat(curr.monto), 0);
-            const uniqueDays = new Set(allExpenses.map(e => e.fecha_gasto)).size || 1;
-            const avgDaily = total / uniqueDays;
-
-            const dailyTotals = allExpenses.reduce((acc, curr) => {
-                acc[curr.fecha_gasto] = (acc[curr.fecha_gasto] || 0) + parseFloat(curr.monto);
-                return acc;
-            }, {});
-
-            let highestDay = { amount: 0, date: 'N/A' };
-            Object.entries(dailyTotals).forEach(([date, amount]) => {
-                if (amount > highestDay.amount) highestDay = { amount, date };
-            });
-
-            const catTotals = allExpenses.reduce((acc, curr) => {
-                acc[curr.categoria] = (acc[curr.categoria] || 0) + parseFloat(curr.monto);
-                return acc;
-            }, {});
-            const topCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
-
-            setStats({ total, today: 0, count: allExpenses.length, avgDaily, topCategory: topCat, highestDay });
+            const dataExpenses = data || [];
+            setAllExpenses(dataExpenses);
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
             setLoading(false);
         }
     };
+
+    const { start: startDate, end: endDate } = useMemo(() => {
+        const today = new Date();
+        if (dateFilter === 'mes') {
+            return { start: startOfMonth(today), end: endOfMonth(today) };
+        } else if (dateFilter === '3meses') {
+            return { start: startOfMonth(subMonths(today, 2)), end: endOfMonth(today) };
+        } else if (dateFilter === '6meses') {
+            return { start: startOfMonth(subMonths(today, 5)), end: endOfMonth(today) };
+        }
+        return { start: startOfMonth(today), end: endOfMonth(today) };
+    }, [dateFilter]);
+
+    const expenses = useMemo(() => {
+        return allExpenses.filter(e => {
+            if (!startDate || !endDate) return true;
+            const startStr = format(startDate, 'yyyy-MM-dd');
+            const endStr = format(endDate, 'yyyy-MM-dd');
+            return e.fecha_gasto >= startStr && e.fecha_gasto <= endStr;
+        });
+    }, [allExpenses, startDate, endDate]);
+
+    const stats = useMemo(() => {
+        const total = expenses.reduce((acc, curr) => acc + parseFloat(curr.monto), 0);
+        const uniqueDays = new Set(expenses.map(e => e.fecha_gasto)).size || 1;
+        const avgDaily = total / uniqueDays;
+
+        const dailyTotals = expenses.reduce((acc, curr) => {
+            acc[curr.fecha_gasto] = (acc[curr.fecha_gasto] || 0) + parseFloat(curr.monto);
+            return acc;
+        }, {});
+
+        let highestDay = { amount: 0, date: 'N/A' };
+        Object.entries(dailyTotals).forEach(([date, amount]) => {
+            if (amount > highestDay.amount) highestDay = { amount, date };
+        });
+
+        const catTotals = expenses.reduce((acc, curr) => {
+            acc[curr.categoria] = (acc[curr.categoria] || 0) + parseFloat(curr.monto);
+            return acc;
+        }, {});
+        const topCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+        return { total, today: 0, count: expenses.length, avgDaily, topCategory: topCat, highestDay };
+    }, [expenses]);
 
     const handleDelete = async (id) => {
         try {
@@ -132,13 +154,13 @@ export default function Dashboard() {
         ).map(([name, value]) => ({ name, value })).reverse().slice(0, 6);
     }, [expenses]);
 
-    const dailyTimelineData = useMemo(() => {
+    const { chartData: dailyTimelineData, yAxisMax } = useMemo(() => {
         const days = eachDayOfInterval({
-            start: startOfMonth(new Date()),
-            end: endOfMonth(new Date())
+            start: startDate,
+            end: endDate
         });
 
-        return days.map(day => {
+        const data = days.map(day => {
             const dateStr = format(day, 'yyyy-MM-dd');
             const dayTotal = expenses
                 .filter(e => e.fecha_gasto === dateStr && (selectedCategory === 'Todas' || e.categoria === selectedCategory))
@@ -146,7 +168,27 @@ export default function Dashboard() {
 
             return { date: format(day, 'dd/MM'), monto: dayTotal, fullDate: dateStr };
         });
-    }, [expenses, selectedCategory]);
+
+        const values = data.map(d => d.monto).filter(v => v > 0).sort((a, b) => b - a);
+        let max = 'auto';
+
+        if (useSmartScale && values.length >= 2) {
+            const highest = values[0];
+            const secondHighest = values[1];
+            
+            if (highest > secondHighest * 3 && secondHighest > 0) {
+                max = Math.max(secondHighest * 1.2, (values[2] || secondHighest) * 1.5);
+            }
+        }
+
+        const processedData = data.map(d => ({
+            ...d,
+            displayMonto: max === 'auto' ? d.monto : Math.min(d.monto, max),
+            isOutlier: max !== 'auto' && d.monto > max
+        }));
+
+        return { chartData: processedData, yAxisMax: max };
+    }, [expenses, selectedCategory, startDate, endDate, useSmartScale]);
 
     const categoryData = Object.entries(
         expenses.reduce((acc, curr) => {
@@ -221,9 +263,21 @@ export default function Dashboard() {
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
+                        <select
+                            className="bg-black/40 text-white font-bold text-sm outline-none cursor-pointer p-2 rounded-xl border border-white/5 print:hidden"
+                            value={dateFilter}
+                            onChange={(e) => setDateFilter(e.target.value)}
+                        >
+                            <option value="mes">Este Mes</option>
+                            <option value="3meses">Últimos 3 Meses</option>
+                            <option value="6meses">Últimos 6 Meses</option>
+                        </select>
+                        <button onClick={() => window.print()} className="print:hidden bg-primary/20 hover:bg-primary text-primary hover:text-white px-3 py-2 rounded-xl text-sm font-bold shadow-lg transition-all flex items-center gap-2">
+                            <Printer size={16} /> PDF
+                        </button>
                         <CurrencySelector />
                         {profile?.rol === 'adminmaster' && (
-                            <Link to="/admin" className="flex items-center gap-2 text-[10px] font-black text-amber-500 border border-amber-500/20 bg-amber-500/10 hover:bg-amber-500 hover:text-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all">
+                            <Link to="/admin" className="flex items-center gap-2 text-[10px] font-black text-amber-500 border border-amber-500/20 bg-amber-500/10 hover:bg-amber-500 hover:text-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all print:hidden">
                                 <LayoutDashboard size={14} /> Admin
                             </Link>
                         )}
@@ -269,16 +323,22 @@ export default function Dashboard() {
                                     <div className="h-8 w-2 bg-primary rounded-full" />
                                     <h3 className="font-black text-xl text-white tracking-tight uppercase">Análisis de Picos Diarios</h3>
                                 </div>
-                                <div className="flex items-center gap-3 bg-black/40 p-2 rounded-2xl border border-white/5">
-                                    <Filter size={14} className="text-primary ml-2" />
-                                    <select
-                                        className="bg-transparent text-white font-bold text-sm outline-none cursor-pointer pr-4"
-                                        value={selectedCategory}
-                                        onChange={(e) => setSelectedCategory(e.target.value)}
-                                    >
-                                        <option value="Todas">Categoría: Todas</option>
-                                        {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                    </select>
+                                <div className="flex items-center gap-3">
+                                    <label className="flex items-center gap-2 cursor-pointer text-xs text-white/70 print:hidden">
+                                        <input type="checkbox" checked={useSmartScale} onChange={(e) => setUseSmartScale(e.target.checked)} className="accent-primary" />
+                                        Smart Scale
+                                    </label>
+                                    <div className="flex items-center gap-3 bg-black/40 p-2 rounded-2xl border border-white/5 print:hidden">
+                                        <Filter size={14} className="text-primary ml-2" />
+                                        <select
+                                            className="bg-transparent text-white font-bold text-sm outline-none cursor-pointer pr-4"
+                                            value={selectedCategory}
+                                            onChange={(e) => setSelectedCategory(e.target.value)}
+                                        >
+                                            <option value="Todas">Categoría: Todas</option>
+                                            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <div className="h-[300px] relative">
@@ -318,10 +378,10 @@ export default function Dashboard() {
                                         <BarChart data={dailyTimelineData}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.01)" />
                                             <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} />
-                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} />
-                                            <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #111', borderRadius: '16px' }} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} domain={yAxisMax === 'auto' ? ['auto', 'auto'] : [0, yAxisMax]} />
+                                            <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #111', borderRadius: '16px' }} formatter={(value, name, props) => [props.payload.monto, 'Monto real']} />
                                             <Bar
-                                                dataKey="monto"
+                                                dataKey="displayMonto"
                                                 fill="url(#picoGrad)"
                                                 radius={[4, 4, 0, 0]}
                                                 style={{ cursor: 'pointer' }}
@@ -334,7 +394,13 @@ export default function Dashboard() {
                                                         });
                                                     }
                                                 }}
-                                            />
+                                            >
+                                                {
+                                                    dailyTimelineData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.isOutlier ? '#ef4444' : 'url(#picoGrad)'} />
+                                                    ))
+                                                }
+                                            </Bar>
                                             <defs>
                                                 <linearGradient id="picoGrad" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="0%" stopColor="#a855f7" />
@@ -395,7 +461,7 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    <div className="lg:col-span-4 w-full h-full">
+                    <div className="lg:col-span-4 w-full h-full print:hidden">
                         <div className="bg-[#111] border border-white/5 p-8 rounded-[40px] shadow-2xl flex flex-col min-h-[850px] lg:h-[calc(100vh-180px)] lg:sticky lg:top-32">
                             <div className="flex items-center justify-between mb-8">
                                 <h3 className="font-black text-xs text-white uppercase tracking-[0.3em] italic">Historial de Gastos</h3>
@@ -405,6 +471,29 @@ export default function Dashboard() {
                                 <ExpenseList expenses={expenses} loading={loading} onDelete={handleDelete} onEdit={setEditingExpense} />
                             </div>
                         </div>
+                    </div>
+
+                    {/* Tabla exclusiva para PDF Print */}
+                    <div className="hidden print:block lg:col-span-12 mt-12 w-full break-inside-avoid">
+                        <h3 className="text-2xl font-bold mb-6 text-black">Reporte de Gastos por Categoría</h3>
+                        <table className="w-full text-left border-collapse bg-white">
+                            <thead>
+                                <tr>
+                                    <th className="border-b-2 border-gray-300 p-4 font-bold text-black">Categoría</th>
+                                    <th className="border-b-2 border-gray-300 p-4 font-bold text-black">Monto Total</th>
+                                    <th className="border-b-2 border-gray-300 p-4 font-bold text-black">% del Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {categoryData.map(cat => (
+                                    <tr key={cat.name}>
+                                        <td className="border-b border-gray-200 p-4 text-black">{cat.name}</td>
+                                        <td className="border-b border-gray-200 p-4 text-black font-medium">{formatMoney(cat.value)}</td>
+                                        <td className="border-b border-gray-200 p-4 text-black">{Math.round((cat.value / stats.total) * 100)}%</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
 
                 </div>
@@ -417,9 +506,24 @@ export default function Dashboard() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a855f7; }
         select option { background: #111; color: #fff; }
+        
+        @media print {
+            header, .print\\:hidden, .custom-scrollbar, #expense-form-container { display: none !important; }
+            body { background: white !important; color: black !important; }
+            * { color: black !important; }
+            .bg-\\[\\#111\\] { background: white !important; border: 1px solid #ddd !important; box-shadow: none !important; }
+            .text-white { color: black !important; }
+            .text-muted-foreground { color: #444 !important; }
+            .bg-black\\/40 { background: white !important; border: 1px solid #ddd !important; }
+            svg { color: black !important; }
+            .break-inside-avoid { page-break-inside: avoid; }
+            @page { size: A4; margin: 15mm; }
+        }
       `}</style>
 
-            <ExpenseForm onAdd={fetchData} onUpdate={() => { fetchData(); setEditingExpense(null); }} editingExpense={editingExpense} onCancelEdit={() => setEditingExpense(null)} />
+            <div id="expense-form-container" className="print:hidden">
+                <ExpenseForm onAdd={fetchData} onUpdate={() => { fetchData(); setEditingExpense(null); }} editingExpense={editingExpense} onCancelEdit={() => setEditingExpense(null)} />
+            </div>
         </div>
     );
 }
