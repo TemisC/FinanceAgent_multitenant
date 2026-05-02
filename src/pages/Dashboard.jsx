@@ -73,6 +73,8 @@ export default function Dashboard() {
         const today = new Date();
         if (dateFilter === 'mes') {
             return { start: startOfMonth(today), end: endOfMonth(today) };
+        } else if (dateFilter === 'mespasado') {
+            return { start: startOfMonth(subMonths(today, 1)), end: endOfMonth(subMonths(today, 1)) };
         } else if (dateFilter === '3meses') {
             return { start: startOfMonth(subMonths(today, 2)), end: endOfMonth(today) };
         } else if (dateFilter === '6meses') {
@@ -269,6 +271,7 @@ export default function Dashboard() {
                             onChange={(e) => setDateFilter(e.target.value)}
                         >
                             <option value="mes">Este Mes</option>
+                            <option value="mespasado">El Mes Pasado</option>
                             <option value="3meses">Últimos 3 Meses</option>
                             <option value="6meses">Últimos 6 Meses</option>
                         </select>
