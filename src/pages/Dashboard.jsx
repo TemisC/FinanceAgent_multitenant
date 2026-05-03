@@ -382,7 +382,7 @@ export default function Dashboard() {
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.01)" />
                                             <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} />
                                             <YAxis axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} domain={yAxisMax === 'auto' ? ['auto', 'auto'] : [0, yAxisMax * 1.15]} />
-                                            <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #111', borderRadius: '16px' }} formatter={(value, name, props) => [props.payload.monto, 'Monto real']} />
+                                            <Tooltip cursor={false} contentStyle={{ backgroundColor: '#000', border: '1px solid #111', borderRadius: '16px' }} formatter={(value, name, props) => [formatMoney(props.payload.monto), 'Monto real']} />
                                             <Bar
                                                 dataKey="displayMonto"
                                                 fill="url(#picoGrad)"
@@ -403,9 +403,12 @@ export default function Dashboard() {
                                                     if (!entry || !entry.isOutlier) return null;
                                                     const displayValue = entry.monto > 1000 ? (entry.monto / 1000).toFixed(1) + 'k' : entry.monto;
                                                     return (
-                                                        <text x={x + width / 2} y={y - 8} fill="#ef4444" textAnchor="middle" fontSize={10} fontWeight="900" className="drop-shadow-md">
-                                                            {displayValue}
-                                                        </text>
+                                                        <g>
+                                                            <rect x={x + width / 2 - 16} y={y - 14} width="32" height="12" rx="4" fill="#ef4444" opacity="0.2" />
+                                                            <text x={x + width / 2} y={y - 5} fill="#ef4444" textAnchor="middle" fontSize={9} fontWeight="900" className="drop-shadow-md">
+                                                                {displayValue}
+                                                            </text>
+                                                        </g>
                                                     );
                                                 }}
                                             >
@@ -421,7 +424,8 @@ export default function Dashboard() {
                                                     <stop offset="100%" stopColor="#3b82f6" />
                                                 </linearGradient>
                                                 <linearGradient id="outlierGrad" x1="0" y1="1" x2="0" y2="0">
-                                                    <stop offset="0%" stopColor="#7f1d1d" />
+                                                    <stop offset="0%" stopColor="#3b82f6" />
+                                                    <stop offset="50%" stopColor="#a855f7" />
                                                     <stop offset="100%" stopColor="#ef4444" />
                                                 </linearGradient>
                                             </defs>
