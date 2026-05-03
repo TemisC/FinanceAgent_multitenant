@@ -156,7 +156,7 @@ export default function Dashboard() {
         ).map(([name, value]) => ({ name, value })).reverse().slice(0, 6);
     }, [expenses]);
 
-    const { chartData: dailyTimelineData, yAxisMax } = useMemo(() => {
+    const { chartData: dailyTimelineData, yAxisMax, trueMax, calculatedDomain, customTicks } = useMemo(() => {
         const days = eachDayOfInterval({
             start: startDate,
             end: endDate
@@ -173,6 +173,7 @@ export default function Dashboard() {
 
         const values = data.map(d => d.monto).filter(v => v > 0).sort((a, b) => b - a);
         let max = 'auto';
+        let currentTrueMax = values.length > 0 ? values[0] : 0;
 
         if (useSmartScale && values.length >= 2) {
             const highest = values[0];
@@ -189,7 +190,18 @@ export default function Dashboard() {
             isOutlier: max !== 'auto' && d.monto > max
         }));
 
-        return { chartData: processedData, yAxisMax: max };
+        let calcDomain = ['auto', 'auto'];
+        let ticks = undefined;
+
+        if (max !== 'auto') {
+            const topDomain = Math.ceil(max * 1.15);
+            calcDomain = [0, topDomain];
+            
+            const step = Math.ceil((max / 3) / 100) * 100;
+            ticks = [0, step, step * 2, step * 3, topDomain];
+        }
+
+        return { chartData: processedData, yAxisMax: max, trueMax: currentTrueMax, calculatedDomain: calcDomain, customTicks: ticks };
     }, [expenses, selectedCategory, startDate, endDate, useSmartScale]);
 
     const categoryData = Object.entries(
@@ -381,7 +393,19 @@ export default function Dashboard() {
                                         <BarChart data={dailyTimelineData}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.01)" />
                                             <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} />
-                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} domain={yAxisMax === 'auto' ? ['auto', 'auto'] : [0, yAxisMax * 1.15]} />
+                                            <YAxis 
+                                                axisLine={false} 
+                                                tickLine={false} 
+                                                tick={{ fill: '#444', fontSize: 9 }} 
+                                                domain={calculatedDomain} 
+                                                ticks={customTicks}
+                                                tickFormatter={(value) => {
+                                                    if (customTicks && value === customTicks[customTicks.length - 1]) {
+                                                        return trueMax > 1000 ? (trueMax / 1000).toFixed(1) + 'k' : trueMax;
+                                                    }
+                                                    return value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value;
+                                                }}
+                                            />
                                             <Tooltip cursor={false} contentStyle={{ backgroundColor: '#000', border: '1px solid #111', borderRadius: '16px' }} formatter={(value, name, props) => [formatMoney(props.payload.monto), 'Monto real']} />
                                             <Bar
                                                 dataKey="displayMonto"
@@ -401,13 +425,9 @@ export default function Dashboard() {
                                                     const { x, y, width, index } = props;
                                                     const entry = dailyTimelineData[index];
                                                     if (!entry || !entry.isOutlier) return null;
-                                                    const displayValue = entry.monto > 1000 ? (entry.monto / 1000).toFixed(1) + 'k' : entry.monto;
                                                     return (
                                                         <g>
-                                                            <rect x={x + width / 2 - 16} y={y - 14} width="32" height="12" rx="4" fill="#ef4444" opacity="0.2" />
-                                                            <text x={x + width / 2} y={y - 5} fill="#ef4444" textAnchor="middle" fontSize={9} fontWeight="900" className="drop-shadow-md">
-                                                                {displayValue}
-                                                            </text>
+                                                            <rect x={x + width / 2 - 4} y={y - 8} width="8" height="8" rx="4" fill="#ef4444" opacity="0.8" />
                                                         </g>
                                                     );
                                                 }}
