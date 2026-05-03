@@ -381,7 +381,7 @@ export default function Dashboard() {
                                         <BarChart data={dailyTimelineData}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.01)" />
                                             <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} />
-                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} domain={yAxisMax === 'auto' ? ['auto', 'auto'] : [0, yAxisMax]} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#444', fontSize: 9 }} domain={yAxisMax === 'auto' ? ['auto', 'auto'] : [0, yAxisMax * 1.15]} />
                                             <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #111', borderRadius: '16px' }} formatter={(value, name, props) => [props.payload.monto, 'Monto real']} />
                                             <Bar
                                                 dataKey="displayMonto"
@@ -397,10 +397,21 @@ export default function Dashboard() {
                                                         });
                                                     }
                                                 }}
+                                                label={(props) => {
+                                                    const { x, y, width, index } = props;
+                                                    const entry = dailyTimelineData[index];
+                                                    if (!entry || !entry.isOutlier) return null;
+                                                    const displayValue = entry.monto > 1000 ? (entry.monto / 1000).toFixed(1) + 'k' : entry.monto;
+                                                    return (
+                                                        <text x={x + width / 2} y={y - 8} fill="#ef4444" textAnchor="middle" fontSize={10} fontWeight="900" className="drop-shadow-md">
+                                                            {displayValue}
+                                                        </text>
+                                                    );
+                                                }}
                                             >
                                                 {
                                                     dailyTimelineData.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={entry.isOutlier ? '#ef4444' : 'url(#picoGrad)'} />
+                                                        <Cell key={`cell-${index}`} fill={entry.isOutlier ? 'url(#outlierGrad)' : 'url(#picoGrad)'} />
                                                     ))
                                                 }
                                             </Bar>
@@ -408,6 +419,10 @@ export default function Dashboard() {
                                                 <linearGradient id="picoGrad" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="0%" stopColor="#a855f7" />
                                                     <stop offset="100%" stopColor="#3b82f6" />
+                                                </linearGradient>
+                                                <linearGradient id="outlierGrad" x1="0" y1="1" x2="0" y2="0">
+                                                    <stop offset="0%" stopColor="#7f1d1d" />
+                                                    <stop offset="100%" stopColor="#ef4444" />
                                                 </linearGradient>
                                             </defs>
                                         </BarChart>
