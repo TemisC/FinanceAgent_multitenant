@@ -322,7 +322,7 @@ export default function Dashboard() {
                     </div>
                 </section>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 break-inside-avoid">
                     <StatCard title="Capital Saliente" value={formatMoney(stats.total)} icon={TrendingUp} color="primary" />
                     <StatCard title="Gasto Medio" value={formatMoney(stats.avgDaily)} icon={Zap} color="blue-500" />
                     <StatCard title="Máximo Día" value={formatMoney(stats.highestDay.amount)} icon={AlertCircle} color="amber-500" />
@@ -332,7 +332,7 @@ export default function Dashboard() {
                 <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 items-start">
 
                     <div className="lg:col-span-8 space-y-8 w-full">
-                        <div className="bg-[#111] border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
+                        <div className="bg-[#111] border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden break-inside-avoid">
                             <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
                                 <div className="flex items-center gap-4">
                                     <div className="h-8 w-2 bg-primary rounded-full" />
@@ -455,7 +455,7 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        <div className="bg-[#111] border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden group">
+                        <div className="bg-[#111] border border-white/5 p-8 rounded-[40px] shadow-2xl relative overflow-hidden group break-inside-avoid mt-8">
                             <div className="flex items-center gap-3 mb-8">
                                 <div className="w-1 h-8 bg-blue-600 rounded-full" />
                                 <h3 className="font-black text-xl text-white tracking-widest uppercase italic">Evolución Mensual</h3>
@@ -473,7 +473,7 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-[#111] border border-white/5 p-8 rounded-[40px] shadow-2xl">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-[#111] border border-white/5 p-8 rounded-[40px] shadow-2xl break-inside-avoid mt-8">
                             <div>
                                 <h3 className="font-black text-xl text-white tracking-tight uppercase mb-8 italic">Distribución de Capital</h3>
                                 <div className="space-y-5">
@@ -558,7 +558,7 @@ export default function Dashboard() {
             .text-muted-foreground { color: #444 !important; }
             .bg-black\\/40 { background: white !important; border: 1px solid #ddd !important; }
             svg { color: black !important; }
-            .break-inside-avoid { page-break-inside: avoid; }
+            .break-inside-avoid { page-break-inside: avoid; break-inside: avoid; }
             @page { size: A4; margin: 15mm; }
         }
       `}</style>
