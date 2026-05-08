@@ -5,7 +5,7 @@ import { Navigate } from 'react-router-dom';
 import { Users, Shield, Search, Trash2, Crown, Activity, PieChart as PieIcon, UserPlus, ArrowUpDown, ChevronDown, ChevronUp, DollarSign, TrendingUp, Copy, Check, Link as LinkIcon, Star } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-const BASE_URL = `${window.location.origin}/controldefinanzas`;
+const LANDING_URL = 'https://miwebsiteonline.com/controldefinanzas/landing';
 
 export default function Admin() {
     const { user, profile, loading } = useAuth();
@@ -111,7 +111,7 @@ export default function Admin() {
     };
 
     const copyReferralLink = (code) => {
-        navigator.clipboard.writeText(`${BASE_URL}/register?ref=${code}`);
+        navigator.clipboard.writeText(`${LANDING_URL}/?ref=${code}`);
         setCopiedCode(code);
         setTimeout(() => setCopiedCode(null), 2000);
     };
@@ -402,7 +402,7 @@ export default function Admin() {
                                 <p className="text-xs text-white/30 mb-4">Los usuarios que se registren con este link quedan vinculados a ti directamente.</p>
                                 <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-2xl p-4">
                                     <span className="flex-1 text-sm text-white/60 font-mono truncate">
-                                        {`${BASE_URL}/register?ref=${profile.referral_code}`}
+                                        {`${LANDING_URL}/?ref=${profile.referral_code}`}
                                     </span>
                                     <button
                                         onClick={() => copyReferralLink(profile.referral_code)}

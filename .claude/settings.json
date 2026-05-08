@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/TEMIS/Downloads/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\TEMIS\\Downloads"
+    ]
+  }
+}

@@ -51,6 +51,7 @@ export default function Dashboard() {
     const [selectedDayDetails, setSelectedDayDetails] = useState(null);
     const [referralOpen, setReferralOpen] = useState(false);
     const [referralCopied, setReferralCopied] = useState(false);
+    const [telegramCopied, setTelegramCopied] = useState(false);
     const [referralCount, setReferralCount] = useState(0);
 
     const fetchData = async () => {
@@ -388,32 +389,64 @@ export default function Dashboard() {
                                     </div>
                                 </button>
                                 {referralOpen && (
-                                    <div className="px-6 pb-6 space-y-4">
+                                    <div className="px-6 pb-6 space-y-5">
                                         <div className="h-px bg-emerald-500/10" />
                                         <div className="bg-emerald-950/40 border border-emerald-500/10 rounded-2xl p-4">
                                             <p className="text-xs text-emerald-300/70 leading-relaxed">
-                                                Comparte tu link. Si tu amigo activa su membresía, <span className="text-emerald-300 font-black">vos ganás ~1 USD por mes</span> mientras siga activo.
+                                                Comparte tu link. Si tu amigo activa su membresía, <span className="text-emerald-300 font-black">vos ganás ~2 USD por mes</span> mientras siga activo.
                                                 Él obtiene <span className="text-emerald-300 font-black">1 mes gratis</span> para probar la app.
                                             </p>
                                         </div>
-                                        <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-2xl p-3">
-                                            <span className="flex-1 text-xs text-white/50 font-mono truncate">
-                                                {`${window.location.origin}/controldefinanzas/register?ref=${profile.referral_code}`}
-                                            </span>
-                                            <button
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(`${window.location.origin}/controldefinanzas/register?ref=${profile.referral_code}`);
-                                                    setReferralCopied(true);
-                                                    setTimeout(() => setReferralCopied(false), 2000);
-                                                }}
-                                                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${referralCopied ? 'bg-emerald-500 text-white' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}
-                                            >
-                                                {referralCopied ? <><Check size={12} /> Copiado</> : <><Copy size={12} /> Copiar</>}
-                                            </button>
+
+                                        {/* Opción 1 — Landing page */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[9px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full">Para redes sociales</span>
+                                            </div>
+                                            <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-2xl p-3">
+                                                <span className="flex-1 text-xs text-white/50 font-mono truncate">
+                                                    {`https://miwebsiteonline.com/controldefinanzas/landing/?ref=${profile.referral_code}`}
+                                                </span>
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(`https://miwebsiteonline.com/controldefinanzas/landing/?ref=${profile.referral_code}`);
+                                                        setReferralCopied(true);
+                                                        setTimeout(() => setReferralCopied(false), 2000);
+                                                    }}
+                                                    className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${referralCopied ? 'bg-emerald-500 text-white' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}
+                                                >
+                                                    {referralCopied ? <><Check size={12} /> Copiado</> : <><Copy size={12} /> Copiar</>}
+                                                </button>
+                                            </div>
+                                            <p className="text-[10px] text-white/20 leading-relaxed px-1">
+                                                Lleva a una página con info de la app + botón para ir al bot. Ideal para postear en Instagram, TikTok o grupos donde el prospecto aún no te conoce.
+                                            </p>
                                         </div>
-                                        <p className="text-[10px] text-white/20 text-center font-bold tracking-widest uppercase">
-                                            Envía este link y listo — sin pasos extra
-                                        </p>
+
+                                        {/* Opción 2 — Bot directo */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[9px] font-black text-white/40 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded-full">Para prospecto listo</span>
+                                            </div>
+                                            <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-2xl p-3">
+                                                <span className="flex-1 text-xs text-white/50 font-mono truncate">
+                                                    {`https://t.me/FinanceAgente_bot?start=${profile.referral_code}`}
+                                                </span>
+                                                <button
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(`https://t.me/FinanceAgente_bot?start=${profile.referral_code}`);
+                                                        setTelegramCopied(true);
+                                                        setTimeout(() => setTelegramCopied(false), 2000);
+                                                    }}
+                                                    className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${telegramCopied ? 'bg-emerald-500 text-white' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}
+                                                >
+                                                    {telegramCopied ? <><Check size={12} /> Copiado</> : <><Copy size={12} /> Copiar</>}
+                                                </button>
+                                            </div>
+                                            <p className="text-[10px] text-white/20 leading-relaxed px-1">
+                                                Va directo al bot de Telegram. Usalo cuando ya convenciste al prospecto en persona o por chat y solo necesita el acceso rápido.
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             </div>

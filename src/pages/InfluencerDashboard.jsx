@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Users, Copy, Check, TrendingUp, UserCheck, Clock, AlertCircle, LogOut, Link as LinkIcon } from 'lucide-react';
 
-const BASE_URL = `${window.location.origin}/controldefinanzas`;
+const LANDING_URL = 'https://miwebsiteonline.com/controldefinanzas/landing';
 
 export default function InfluencerDashboard() {
     const { profile, signOut } = useAuth();
@@ -12,7 +12,7 @@ export default function InfluencerDashboard() {
     const [copied, setCopied] = useState(false);
 
     const referralLink = profile?.referral_code
-        ? `${BASE_URL}/register?ref=${profile.referral_code}`
+        ? `${LANDING_URL}/?ref=${profile.referral_code}`
         : null;
 
     useEffect(() => {

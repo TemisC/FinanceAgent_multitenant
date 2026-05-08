@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instrucciones de Acceso | FinanceAgent</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: '#030303',
+                        card: '#0a0a0a',
+                        accent: '#10b981', // emerald-500
+                        'accent-hover': '#059669', // emerald-600
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background-color: #030303;
+            color: #ffffff;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .text-gradient-accent {
+            background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-accent selection:text-white relative p-6">
+
+    <!-- Ambient background glows -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-900/20 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-900/10 rounded-full blur-[120px]"></div>
+    </div>
+
+    <div class="max-w-2xl mx-auto w-full">
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center gap-2 mb-6">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+                </div>
+                <span class="text-2xl font-bold tracking-tight">FinanceAgent</span>
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-[2rem] p-8 md:p-12 border border-white/10 shadow-2xl relative overflow-hidden">
+            <!-- Decorative light -->
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl"></div>
+
+            <div class="relative z-10">
+                <h1 class="text-3xl md:text-4xl font-extrabold mb-4 text-gradient">¡Gracias por elegirnos! 🎉</h1>
+                <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                    Estás a un paso de organizar y dominar tus finanzas con <span class="text-white font-semibold">FinanceAgent</span>.
+                </p>
+
+                <div class="space-y-8">
+                    <!-- Paso 1 -->
+                    <div class="flex gap-5">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">1</div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-2">Activa tu Bot en Telegram</h3>
+                            <p class="text-gray-400 text-sm mb-4">Simplemente dale a "Iniciar" y sigue las instrucciones para vincular tu cuenta.</p>
+                            <a id="btn-telegram" href="https://t.me/FinanceAgente_bot" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                                Ir al bot de Telegram
+                            </a>
+                            <p class="mt-2 text-xs text-gray-500">O busca: <span class="text-emerald-400 font-mono">@FinanceAgente_bot</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Paso 2 -->
+                    <div class="flex gap-5">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white font-bold">2</div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-2">Accede a tu Dashboard</h3>
+                            <p class="text-gray-400 text-sm mb-4">Puedes ver todos tus gráficos y el análisis detallado de tus gastos aquí.</p>
+                            <a href="https://miwebsiteonline.com/controldefinanzas/" target="_blank" class="text-emerald-400 hover:text-emerald-300 flex items-center gap-2 font-medium transition-colors">
+                                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                                Panel de Control FinanceAgent
+                                <i data-lucide="external-link" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Importante -->
+                    <div class="bg-emerald-900/10 border border-emerald-500/20 rounded-2xl p-5 flex gap-4">
+                        <i data-lucide="info" class="w-6 h-6 text-emerald-400 flex-shrink-0"></i>
+                        <p class="text-sm text-gray-300">
+                            <span class="text-white font-bold block mb-1">Nota importante:</span>
+                            Las credenciales de acceso las vas a recibir una vez actives tu bot en telegram.
+                        </p>
+                    </div>
+
+                    <hr class="border-white/5">
+
+                    <!-- Mobile Apps -->
+                    <div>
+                        <p class="text-sm font-medium text-gray-400 mb-4 flex items-center gap-2">
+                            <i data-lucide="smartphone" class="w-4 h-4"></i>
+                            ¿Aún no tienes Telegram instalado?
+                        </p>
+                        <div class="flex flex-wrap gap-4">
+                            <a href="https://play.google.com/store/apps/details?id=org.telegram.messenger" target="_blank" class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors text-sm">
+                                <i data-lucide="play" class="w-4 h-4"></i>
+                                Play Store
+                            </a>
+                            <a href="https://apps.apple.com/app/telegram-messenger/id686449807" target="_blank" class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors text-sm">
+                                <i data-lucide="apple" class="w-4 h-4"></i>
+                                App Store
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 text-center">
+                    <p class="text-gray-500 text-sm mb-4">Si tienes alguna duda o necesitas soporte, no dudes en contactarnos.</p>
+                    <a href="https://walink.co/9p8kk9" target="_blank" class="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300 font-bold mb-8 transition-colors">
+                        <i data-lucide="message-circle" class="w-5 h-5"></i>
+                        Contacto Servicio al Cliente
+                    </a>
+                    <p class="text-emerald-400 font-bold tracking-wide text-sm uppercase">¡Bienvenido a la gestión de gastos sin fricción!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-8">
+            <a href="index.html" class="text-gray-500 hover:text-white text-sm transition-colors flex items-center justify-center gap-2">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                Volver a la página principal
+            </a>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Inyectar ref code en el link del bot si viene de un link de referido
+        const ref = new URLSearchParams(window.location.search).get('ref');
+        if (ref) {
+            document.getElementById('btn-telegram').href =
+                `https://t.me/FinanceAgente_bot?start=${ref}`;
+        }
+    </script>
+</body>
+</html>
