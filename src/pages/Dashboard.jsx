@@ -393,7 +393,7 @@ export default function Dashboard() {
                                         <div className="h-px bg-emerald-500/10" />
                                         <div className="bg-emerald-950/40 border border-emerald-500/10 rounded-2xl p-4">
                                             <p className="text-xs text-emerald-300/70 leading-relaxed">
-                                                Comparte tu link. Si tu amigo activa su membresía, <span className="text-emerald-300 font-black">vos ganás ~2 USD por mes</span> mientras siga activo.
+                                                Comparte tu link. Si tu amigo activa su membresía, <span className="text-emerald-300 font-black">vos ganás una comisión mensual</span> mientras siga activo.
                                                 Él obtiene <span className="text-emerald-300 font-black">1 mes gratis</span> para probar la app.
                                             </p>
                                         </div>
