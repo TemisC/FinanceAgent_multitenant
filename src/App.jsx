@@ -5,29 +5,34 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Admin from './pages/Admin';
+import InfluencerDashboard from './pages/InfluencerDashboard';
+
+const Spinner = () => (
+  <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+  </div>
+);
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) return (
-    <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-    </div>
-  );
-
+  const { user, profile, loading } = useAuth();
+  if (loading) return <Spinner />;
   if (!user) return <Navigate to="/login" replace />;
+  // Redirigir influencers a su panel propio
+  if (profile?.rol === 'influencer') return <Navigate to="/influencer" replace />;
+  return children;
+};
+
+const InfluencerRoute = ({ children }) => {
+  const { user, profile, loading } = useAuth();
+  if (loading) return <Spinner />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (profile?.rol !== 'influencer') return <Navigate to="/" replace />;
   return children;
 };
 
 const AuthRoute = ({ children }) => {
   const { user, loading } = useAuth();
-
-  if (loading) return (
-    <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-    </div>
-  );
-
+  if (loading) return <Spinner />;
   if (user) return <Navigate to="/" replace />;
   return children;
 };
@@ -39,6 +44,7 @@ function AppRoutes() {
       <Route path="/register" element={<AuthRoute><Register /></AuthRoute>} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+      <Route path="/influencer" element={<InfluencerRoute><InfluencerDashboard /></InfluencerRoute>} />
     </Routes>
   );
 }

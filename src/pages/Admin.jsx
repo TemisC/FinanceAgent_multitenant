@@ -2,19 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Users, Shield, Search, Trash2, Crown, Activity, PieChart as PieIcon, UserPlus, ArrowUpDown, ChevronDown, ChevronUp, DollarSign, TrendingUp } from 'lucide-react';
+import { Users, Shield, Search, Trash2, Crown, Activity, PieChart as PieIcon, UserPlus, ArrowUpDown, ChevronDown, ChevronUp, DollarSign, TrendingUp, Copy, Check, Link as LinkIcon, Star } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+const BASE_URL = `${window.location.origin}/controldefinanzas`;
 
 export default function Admin() {
     const { user, profile, loading } = useAuth();
     const [activeTab, setActiveTab] = useState('kpis');
     const [users, setUsers] = useState([]);
+    const [influencers, setInfluencers] = useState([]);
     const [stats, setStats] = useState({ totalRevenue: 0, activeUsers: 0, trialUsers: 0, conversionRate: 0 });
     const [chartData, setChartData] = useState([]);
     const [fetching, setFetching] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [sortOrder, setSortOrder] = useState('asc'); // 'asc' | 'desc'
+    const [sortOrder, setSortOrder] = useState('asc');
     const [sortBy, setSortBy] = useState('fecha_vencimiento');
+    const [copiedCode, setCopiedCode] = useState(null);
 
     const fetchAdminData = async () => {
         setFetching(true);
@@ -32,6 +36,21 @@ export default function Admin() {
                 return { ...p, ultima_actividad: lastExpense?.created_at || null };
             }));
             setUsers(usersWithActivity);
+
+            // Influencers + adminmaster con su link propio
+            const influencerProfiles = usersWithActivity.filter(u =>
+                u.rol === 'influencer' || u.rol === 'adminmaster'
+            );
+            const influencersWithStats = influencerProfiles.map((inf) => {
+                const referrals = profiles.filter(u => u.referred_by === inf.referral_code);
+                return {
+                    ...inf,
+                    total_referidos: referrals.length,
+                    referidos_activos: referrals.filter(r => r.estado_suscripcion === 'active').length,
+                    referidos_trial: referrals.filter(r => r.estado_suscripcion === 'trial').length,
+                };
+            });
+            setInfluencers(influencersWithStats);
 
             const active = profiles.filter(u => u.estado_suscripcion === 'active').length;
             const trials = profiles.filter(u => u.estado_suscripcion === 'trial').length;
@@ -81,6 +100,20 @@ export default function Admin() {
         const order = sortBy === field && sortOrder === 'asc' ? 'desc' : 'asc';
         setSortOrder(order);
         setSortBy(field);
+    };
+
+    const toggleInfluencer = async (userId, currentRol) => {
+        const newRol = currentRol === 'influencer' ? 'user' : 'influencer';
+        const label = newRol === 'influencer' ? 'gestor' : 'usuario normal';
+        if (!confirm(`¿Cambiar rol a ${label}?`)) return;
+        const { error } = await supabase.from('perfiles').update({ rol: newRol }).eq('id', userId);
+        if (!error) fetchAdminData();
+    };
+
+    const copyReferralLink = (code) => {
+        navigator.clipboard.writeText(`${BASE_URL}/register?ref=${code}`);
+        setCopiedCode(code);
+        setTimeout(() => setCopiedCode(null), 2000);
     };
 
     const getHoursSince = (dateString) => {
@@ -143,7 +176,13 @@ export default function Admin() {
                             onClick={() => setActiveTab('users')}
                             className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-white/40 hover:text-white'}`}
                         >
-                            Gestión Usuarios
+                            Usuarios
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('influencers')}
+                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'influencers' ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-white/40 hover:text-white'}`}
+                        >
+                            Gestores
                         </button>
                     </div>
                 </div>
@@ -268,7 +307,7 @@ export default function Admin() {
                                                 </div>
                                             </th>
                                             <th className="p-6">Actividad</th>
-                                            <th className="p-6 text-center">VIP</th>
+                                            <th className="p-6 text-center">Roles</th>
                                             <th className="p-6 text-right">Control de Acceso</th>
                                         </tr>
                                     </thead>
@@ -301,12 +340,22 @@ export default function Admin() {
                                                 </td>
                                                 <td className="p-6 text-center">
                                                     {u.rol !== 'adminmaster' && (
-                                                        <button
-                                                            onClick={() => toggleVip(u.id, u.es_vip)}
-                                                            className={`p-2 rounded-xl transition-all ${u.es_vip ? 'bg-amber-500/20 text-amber-500 scale-110 shadow-lg shadow-amber-500/10' : 'text-white/10 hover:text-white/30'}`}
-                                                        >
-                                                            <Crown size={18} fill={u.es_vip ? "currentColor" : "none"} />
-                                                        </button>
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <button
+                                                                onClick={() => toggleVip(u.id, u.es_vip)}
+                                                                className={`p-2 rounded-xl transition-all ${u.es_vip ? 'bg-amber-500/20 text-amber-500 scale-110 shadow-lg shadow-amber-500/10' : 'text-white/10 hover:text-white/30'}`}
+                                                                title="VIP"
+                                                            >
+                                                                <Crown size={18} fill={u.es_vip ? "currentColor" : "none"} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => toggleInfluencer(u.id, u.rol)}
+                                                                className={`p-2 rounded-xl transition-all ${u.rol === 'influencer' ? 'bg-violet-500/20 text-violet-400 scale-110 shadow-lg shadow-violet-500/10' : 'text-white/10 hover:text-violet-400'}`}
+                                                                title="Gestor"
+                                                            >
+                                                                <Star size={18} fill={u.rol === 'influencer' ? "currentColor" : "none"} />
+                                                            </button>
+                                                        </div>
                                                     )}
                                                 </td>
                                                 <td className="p-6 text-right space-x-4">
@@ -335,6 +384,127 @@ export default function Admin() {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'influencers' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+
+                        {/* Link propio del adminmaster */}
+                        {profile?.referral_code && (
+                            <div className="bg-gradient-to-br from-amber-900/20 to-orange-900/10 border border-amber-500/20 rounded-[40px] p-8">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <LinkIcon size={13} className="text-amber-400" />
+                                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Tu Link Personal (Admin Master)</p>
+                                </div>
+                                <p className="text-xs text-white/30 mb-4">Los usuarios que se registren con este link quedan vinculados a ti directamente.</p>
+                                <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-2xl p-4">
+                                    <span className="flex-1 text-sm text-white/60 font-mono truncate">
+                                        {`${BASE_URL}/register?ref=${profile.referral_code}`}
+                                    </span>
+                                    <button
+                                        onClick={() => copyReferralLink(profile.referral_code)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${copiedCode === profile.referral_code ? 'bg-emerald-500 text-white' : 'bg-amber-500 hover:bg-amber-400 text-black'}`}
+                                    >
+                                        {copiedCode === profile.referral_code ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tabla de influencers */}
+                        <div className="bg-[#111] border border-white/5 rounded-[40px] overflow-hidden shadow-2xl relative">
+                            {fetching && (
+                                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-violet-500"></div>
+                                </div>
+                            )}
+                            <div className="px-8 pt-8 pb-4 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Star size={14} className="text-violet-400" />
+                                    <h2 className="text-xs font-black text-white/40 uppercase tracking-widest italic">Red de Gestores</h2>
+                                </div>
+                                <span className="text-[10px] text-white/20 font-black uppercase tracking-widest">
+                                    Para promover un usuario, ve a la pestaña Usuarios
+                                </span>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-black/50 text-white/30 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5">
+                                            <th className="p-6">Gestor</th>
+                                            <th className="p-6">Rol</th>
+                                            <th className="p-6 text-center">Referidos</th>
+                                            <th className="p-6 text-center">Activos</th>
+                                            <th className="p-6 text-center">Trial</th>
+                                            <th className="p-6">Link de Referido</th>
+                                            <th className="p-6 text-center">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {influencers.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="p-20 text-center text-white/20 uppercase font-black tracking-widest">
+                                                    No hay gestores aún
+                                                </td>
+                                            </tr>
+                                        ) : influencers.map((inf) => (
+                                            <tr key={inf.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
+                                                <td className="p-6">
+                                                    <p className="text-sm font-bold text-white">{inf.email}</p>
+                                                    <p className="text-[10px] text-white/30 mt-0.5">Código: {inf.referral_code}</p>
+                                                </td>
+                                                <td className="p-6">
+                                                    <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${inf.rol === 'adminmaster' ? 'bg-amber-500/10 text-amber-400' : 'bg-violet-500/10 text-violet-400'}`}>
+                                                        {inf.rol === 'adminmaster' ? 'Admin Master' : 'Gestor'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-6 text-center">
+                                                    <span className="text-2xl font-black text-white">{inf.total_referidos}</span>
+                                                </td>
+                                                <td className="p-6 text-center">
+                                                    <span className="text-lg font-black text-emerald-400">{inf.referidos_activos}</span>
+                                                </td>
+                                                <td className="p-6 text-center">
+                                                    <span className="text-lg font-black text-blue-400">{inf.referidos_trial}</span>
+                                                </td>
+                                                <td className="p-6">
+                                                    <button
+                                                        onClick={() => copyReferralLink(inf.referral_code)}
+                                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${copiedCode === inf.referral_code ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-white/30 hover:bg-violet-500/10 hover:text-violet-400'}`}
+                                                    >
+                                                        {copiedCode === inf.referral_code ? <><Check size={11} /> Copiado</> : <><Copy size={11} /> Copiar Link</>}
+                                                    </button>
+                                                </td>
+                                                <td className="p-6 text-center">
+                                                    {inf.rol !== 'adminmaster' && (
+                                                        <button
+                                                            onClick={() => toggleInfluencer(inf.id, inf.rol)}
+                                                            className="text-[9px] font-black uppercase tracking-widest text-red-400/50 hover:text-red-400 transition-colors px-3 py-1.5 rounded-xl hover:bg-red-500/10"
+                                                        >
+                                                            Quitar Rol
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Instrucción para promover */}
+                        <div className="bg-[#111] border border-violet-500/10 rounded-[32px] p-6 flex items-start gap-4">
+                            <div className="bg-violet-500/10 p-3 rounded-2xl text-violet-400 shrink-0">
+                                <Star size={18} />
+                            </div>
+                            <div>
+                                <p className="text-xs font-black text-white/60 uppercase tracking-widest mb-1">¿Cómo agregar un gestor?</p>
+                                <p className="text-xs text-white/30 leading-relaxed">
+                                    Ve a la pestaña <span className="text-amber-400 font-black">Usuarios</span>, busca al usuario y activa el ícono <span className="text-violet-400 font-black">★ Gestor</span> en su fila. El usuario quedará promovido y su link de referido se activará automáticamente.
+                                </p>
                             </div>
                         </div>
                     </div>

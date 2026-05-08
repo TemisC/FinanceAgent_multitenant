@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-    TrendingUp, Zap, AlertCircle, History, Filter, Wallet, LayoutDashboard, X, Printer
+    TrendingUp, Zap, AlertCircle, History, Filter, Wallet, LayoutDashboard, X, Printer,
+    Gift, Copy, Check, ChevronDown, ChevronUp
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -48,6 +49,9 @@ export default function Dashboard() {
     const [dateFilter, setDateFilter] = useState('mes');
     const [editingExpense, setEditingExpense] = useState(null);
     const [selectedDayDetails, setSelectedDayDetails] = useState(null);
+    const [referralOpen, setReferralOpen] = useState(false);
+    const [referralCopied, setReferralCopied] = useState(false);
+    const [referralCount, setReferralCount] = useState(0);
 
     const fetchData = async () => {
         if (!user) return;
@@ -135,6 +139,16 @@ export default function Dashboard() {
             }
         }
     }, [user, profile, navigate]);
+
+    useEffect(() => {
+        if (profile?.referral_code && profile?.rol === 'user') {
+            supabase
+                .from('perfiles')
+                .select('id', { count: 'exact', head: true })
+                .eq('referred_by', profile.referral_code)
+                .then(({ count }) => setReferralCount(count || 0));
+        }
+    }, [profile?.referral_code]);
 
     useEffect(() => {
         if (selectedDayDetails) {
@@ -328,6 +342,86 @@ export default function Dashboard() {
                     <StatCard title="Máximo Día" value={formatMoney(stats.highestDay.amount)} icon={AlertCircle} color="amber-500" />
                     <StatCard title="Movimientos" value={stats.count} icon={History} color="emerald-500" />
                 </div>
+
+                {profile?.rol === 'user' && profile?.referral_code && (() => {
+                    const isInactive = profile.estado_suscripcion === 'expired' || profile.estado_suscripcion === 'banned';
+                    const isActive = profile.estado_suscripcion === 'active' || profile.estado_suscripcion === 'trial';
+
+                    // Banner de advertencia: expirado/baneado con referidos activos
+                    if (isInactive && referralCount > 0) return (
+                        <div className="mb-8 print:hidden">
+                            <div className="bg-orange-950/30 border border-orange-500/30 rounded-[28px] px-6 py-5 flex items-center gap-4">
+                                <div className="shrink-0 bg-orange-500/20 p-3 rounded-2xl text-orange-400">
+                                    <Gift size={20} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-black text-orange-300 uppercase tracking-widest mb-1">
+                                        Estás perdiendo comisiones
+                                    </p>
+                                    <p className="text-xs text-orange-200/60 leading-relaxed">
+                                        Tenés <span className="text-orange-300 font-black">{referralCount} referido{referralCount !== 1 ? 's' : ''}</span> vinculado{referralCount !== 1 ? 's' : ''} a tu cuenta. Mientras tu suscripción esté inactiva, esas comisiones van al dueño de la app.{' '}
+                                        <span className="text-orange-300 font-black">Ponete al día para volver a recibirlas.</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    );
+
+                    // Banner de promo: activo o trial
+                    if (isActive) return (
+                        <div className="mb-8 print:hidden">
+                            <div className={`border rounded-[28px] transition-all duration-300 overflow-hidden ${referralOpen ? 'bg-emerald-950/30 border-emerald-500/20' : 'bg-white/[0.03] border-white/5 hover:border-white/10'}`}>
+                                <button
+                                    onClick={() => setReferralOpen(!referralOpen)}
+                                    className="w-full flex items-center justify-between px-6 py-4 text-left"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-xl transition-colors ${referralOpen ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/30'}`}>
+                                            <Gift size={16} />
+                                        </div>
+                                        <p className="text-xs font-black text-white/50 uppercase tracking-widest">
+                                            ¿Te gusta FinanceAgent? <span className="text-white/30 font-bold normal-case tracking-normal">Refiere amigos y gana dinero cada mes.</span>
+                                        </p>
+                                    </div>
+                                    <div className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${referralOpen ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/20 hover:text-white/50'}`}>
+                                        {referralOpen ? <><ChevronUp size={12} /> Ocultar</> : <><ChevronDown size={12} /> Activar mi link</>}
+                                    </div>
+                                </button>
+                                {referralOpen && (
+                                    <div className="px-6 pb-6 space-y-4">
+                                        <div className="h-px bg-emerald-500/10" />
+                                        <div className="bg-emerald-950/40 border border-emerald-500/10 rounded-2xl p-4">
+                                            <p className="text-xs text-emerald-300/70 leading-relaxed">
+                                                Comparte tu link. Si tu amigo activa su membresía, <span className="text-emerald-300 font-black">vos ganás ~1 USD por mes</span> mientras siga activo.
+                                                Él obtiene <span className="text-emerald-300 font-black">1 mes gratis</span> para probar la app.
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded-2xl p-3">
+                                            <span className="flex-1 text-xs text-white/50 font-mono truncate">
+                                                {`${window.location.origin}/controldefinanzas/register?ref=${profile.referral_code}`}
+                                            </span>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(`${window.location.origin}/controldefinanzas/register?ref=${profile.referral_code}`);
+                                                    setReferralCopied(true);
+                                                    setTimeout(() => setReferralCopied(false), 2000);
+                                                }}
+                                                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${referralCopied ? 'bg-emerald-500 text-white' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}`}
+                                            >
+                                                {referralCopied ? <><Check size={12} /> Copiado</> : <><Copy size={12} /> Copiar</>}
+                                            </button>
+                                        </div>
+                                        <p className="text-[10px] text-white/20 text-center font-bold tracking-widest uppercase">
+                                            Envía este link y listo — sin pasos extra
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+
+                    return null;
+                })()}
 
                 <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 items-start">
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useNavigate, Link } from 'react-router-dom';
-import { Shield, Mail, Key, ChevronRight, Loader2, LogIn } from 'lucide-react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { Shield, Mail, Key, ChevronRight, Loader2, LogIn, UserCheck } from 'lucide-react';
 
 export default function Register() {
     const [email, setEmail] = useState('');
@@ -9,12 +9,15 @@ export default function Register() {
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const refCode = searchParams.get('ref');
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setLoading(true);
         setErrorMsg('');
-        const { error } = await supabase.auth.signUp({ email, password });
+        const options = refCode ? { data: { referred_by: refCode } } : {};
+        const { error } = await supabase.auth.signUp({ email, password, options });
         if (error) {
             setErrorMsg(error.message);
             setLoading(false);
@@ -34,6 +37,13 @@ export default function Register() {
                 </div>
                 <h1 className="text-4xl font-black text-white tracking-widest uppercase italic mb-2">Crear Cuenta</h1>
                 <p className="text-muted-foreground font-bold tracking-[0.3em] uppercase text-xs mb-10">Agente de Finanzas</p>
+
+                {refCode && (
+                    <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl px-4 py-3 mb-6">
+                        <UserCheck size={16} className="text-emerald-400 shrink-0" />
+                        <p className="text-[11px] text-emerald-400 font-black uppercase tracking-widest">Invitado por un referido</p>
+                    </div>
+                )}
 
                 <form onSubmit={handleRegister} className="space-y-6">
                     <div className="relative text-left">
